@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = "apps/web/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--include=dev"
+
+# VITE_SERVER_URL must be set in Netlify's build environment to the public
+# HTTPS/WSS backend address. Netlify hosts the frontend, not the Colyseus process.
+# Do not route missing assets to index.html: HTML disguised as GLB/WASM hangs loaders.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

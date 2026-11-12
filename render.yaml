@@ -1,0 +1,18 @@
+# Optional backend deployment blueprint. Netlify continues to host the frontend.
+# One process: room state is in memory; do not horizontally scale without shared
+# presence/driver and routing. Restarts end active matches.
+services:
+  - type: web
+    name: broom-league-server
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --include=dev
+    startCommand: npm start --workspace apps/server
+    healthCheckPath: /health
+    numInstances: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production

@@ -21,7 +21,8 @@
     "test:flight": "node tests/flight-browser.mjs",
     "test:aero": "node tests/aerodynamics-browser.mjs",
     "test:roll": "node tests/roll-browser.mjs",
-    "test:match": "node tests/match-browser.mjs"
+    "test:match": "node tests/match-browser.mjs",
+    "test:startup": "node tests/startup-browser.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",

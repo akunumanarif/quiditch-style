@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { MatchRoom } from "./rooms/MatchRoom.ts";
 import { Server, Room, type Client } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
@@ -111,10 +112,24 @@ class FlightRoom extends Room {
     this.lastInput.delete(client.sessionId);
   }
 }
-const server = new Server({ transport: new WebSocketTransport() });
+const server = new Server({
+  transport: new WebSocketTransport(),
+  express(app) {
+    app.get(
+      "/health",
+      (_request: IncomingMessage, response: ServerResponse) => {
+        response.setHeader("Cache-Control", "no-store");
+        response.setHeader("Content-Type", "application/json");
+        response.end(
+          JSON.stringify({ ok: true, service: "broom-league", protocol: 1 }),
+        );
+      },
+    );
+  },
+});
 server.define("flight", FlightRoom);
 server.define("match", MatchRoom);
-await server.listen(Number(process.env.PORT || 2567));
+await server.listen(Number(process.env.PORT || 2567), "0.0.0.0");
 console.log(
   JSON.stringify({
     event: "server_ready",

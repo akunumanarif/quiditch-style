@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-11-12T08:55:06.438Z",
+  "productionHostname": "deployment.test",
+  "missingBackendShowsError": true,
+  "noGuessedPort": true,
+  "noHeavyAssetsBeforeConfig": true,
+  "retry": true,
+  "practiceWithoutBackend": true,
+  "errors": []
+}

@@ -7,7 +7,8 @@ import {
   keyboardTurnRate,
 } from "../../../packages/shared/aerodynamics.ts";
 import { clamp, damp, dampAngle } from "../../../packages/shared/motion.ts";
-import { Client, type Room } from "@colyseus/sdk";
+import type { Room } from "@colyseus/sdk";
+import { serverEndpoint, openGameRoom, withDeadline } from "./startup";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Matrix } from "@babylonjs/core/Maths/math.vector";
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -43,6 +44,9 @@ let pendingRebind: ((event: KeyboardEvent) => void) | undefined;
 let world: ReturnType<typeof buildArena> | undefined;
 let runtime: Awaited<ReturnType<typeof makeEngine>> | undefined;
 let room: Room | undefined;
+let arenaLoadPromise: Promise<void> | undefined;
+let starting = false;
+let arenaFailed = false;
 let matchState: MatchSnapshot | undefined;
 let matchObjects: ReturnType<typeof createMatchObjects> | undefined;
 const matchUI = createMatchUI(
@@ -383,8 +387,7 @@ async function readiness() {
     };
   });
 }
-async function ensureWorld() {
-  if (world) return;
+async function loadWorld() {
   stage = "Loading arena";
   toast("Building Windmere arena…");
   await boot;
@@ -398,7 +401,23 @@ async function ensureWorld() {
     settings.quality === "Auto" ? effectiveQuality : settings.quality,
   );
   runtime.engine.runRenderLoop(update);
-  await Promise.all([world.physicsReady, world.assetReady, world.sceneryReady]);
+  const pending = new Set(["fisika", "karakter", "stadion & pencahayaan"]);
+  const track = async (task: Promise<unknown>, name: string) => {
+    await task;
+    pending.delete(name);
+    loadingStatus(
+      pending.size ? `Memuat ${[...pending].join(", ")}…` : "Arena siap.",
+    );
+  };
+  await withDeadline(
+    Promise.all([
+      track(world.physicsReady, "fisika"),
+      track(world.assetReady, "karakter"),
+      track(world.sceneryReady, "stadion & pencahayaan"),
+    ]),
+    90000,
+    "Pemuatan arena terlalu lama. Periksa koneksi internet lalu muat ulang halaman.",
+  );
   window.addEventListener("resize", () => runtime?.engine.resize());
   canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();
@@ -409,15 +428,29 @@ async function ensureWorld() {
   ready = true;
   stage = "Ready";
 }
+function loadingStatus(message: string) {
+  const text = document.querySelector("#startup-stage");
+  if (text) text.textContent = message;
+  stage = message;
+}
+function ensureWorld() {
+  return (arenaLoadPromise ??= loadWorld().catch((error) => {
+    arenaFailed = true;
+    throw error;
+  }));
+}
 async function connect(kind: "create" | "join", id?: string, token?: string) {
-  const origin =
-    import.meta.env.VITE_SERVER_URL ||
-    `${location.protocol === "https:" ? "wss" : "ws"}://${location.hostname}:2567`;
-  const client = new Client(origin);
-  room =
-    kind === "create"
-      ? await client.create("match", { name: settings.name })
-      : await client.joinById(id!, { invite: token, name: settings.name });
+  const endpoint = serverEndpoint(
+    import.meta.env.VITE_SERVER_URL,
+    location,
+    import.meta.env.DEV,
+  );
+  room = await openGameRoom(endpoint, {
+    kind,
+    name: settings.name,
+    id,
+    invite: token,
+  });
   room.reconnection.minUptime = 0;
   me = makePilot(room.sessionId, settings.name);
   currentRoom = room.roomId;
@@ -486,14 +519,28 @@ async function begin(
   id?: string,
   token?: string,
 ) {
+  if (starting) return;
+  starting = true;
   try {
+    await boot;
+    // Validate production configuration before downloading arena assets.
+    if (kind !== "practice")
+      serverEndpoint(
+        import.meta.env.VITE_SERVER_URL,
+        location,
+        import.meta.env.DEV,
+      );
     if (!(await readiness())) return;
     modal(
-      '<div class="eyebrow">PREPARING YOUR FLIGHT</div><h2>Almost in the air…</h2><p>Memuat arena dan menghubungkan sesi.</p>',
+      '<div class="eyebrow">PREPARING YOUR FLIGHT</div><h2>Almost in the air…</h2><p id="startup-stage">Menyiapkan sesi…</p>',
     );
+    if (kind !== "practice") {
+      loadingStatus("Menghubungkan server pertandingan…");
+      await connect(kind, id, token);
+    }
+    loadingStatus("Memuat arena, karakter, dan fisika…");
     await ensureWorld();
-    if (kind !== "practice") await connect(kind, id, token);
-    else {
+    if (kind === "practice") {
       me = makePilot("local", settings.name);
       pilots = [me];
     }
@@ -516,8 +563,41 @@ async function begin(
     if (matchState) matchUI.update(matchState);
     toast("Klik arena untuk mouse look. W untuk terbang.");
   } catch (e) {
-    closeModal();
-    toast(e instanceof Error ? e.message : "Tidak dapat memulai. Coba lagi.");
+    if (room) {
+      const failed = room;
+      room = undefined;
+      void failed.leave().catch(() => {});
+      failed.connection?.close();
+    }
+    matchState = undefined;
+    pilots = [];
+    matchUI.clear();
+    try {
+      sessionStorage.removeItem("broomleague:reconnect:v1");
+    } catch {
+      /* optional */
+    }
+    modal(
+      '<div class="eyebrow">FLIGHT STARTUP</div><h2 id="startup-error-title">Belum bisa memulai</h2><p id="startup-error" role="alert"></p><button class="primary" id="startup-retry">Coba lagi →</button><button class="outline" id="startup-practice">Quick practice</button><button class="text-button" id="startup-back">Kembali ke menu</button><button class="text-button" id="startup-reload">Muat ulang halaman</button>',
+    );
+    $("#startup-error").textContent =
+      e instanceof Error ? e.message : "Tidak dapat memulai. Coba lagi.";
+    $("#startup-retry").textContent = arenaFailed
+      ? "Muat ulang & coba lagi →"
+      : "Coba lagi →";
+    $("#startup-retry").onclick = () => {
+      if (arenaFailed) location.reload();
+      else void begin(kind, id, token);
+    };
+    $("#startup-practice").style.display = arenaFailed ? "none" : "";
+    $("#startup-practice").onclick = () => void begin("practice");
+    $("#startup-back").onclick = () => {
+      closeModal();
+      shell();
+    };
+    $("#startup-reload").onclick = () => location.reload();
+  } finally {
+    starting = false;
   }
 }
 function hud() {

@@ -30,6 +30,13 @@ test(
     const rooms: Room[] = [];
     try {
       await until(() => started);
+      const health = await fetch("http://localhost:2579/health");
+      assert.equal(health.status, 200);
+      assert.deepEqual(await health.json(), {
+        ok: true,
+        service: "broom-league",
+        protocol: 1,
+      });
       const client = new Client("ws://localhost:2579");
       const h = await client.create("match", { name: "Host" });
       rooms.push(h);

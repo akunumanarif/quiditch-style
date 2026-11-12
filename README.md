@@ -47,7 +47,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-`check`: strict TypeScript, ESLint, 42 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
+`check`: strict TypeScript, ESLint, 47 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
 
 ```sh
 npm run build
@@ -56,7 +56,7 @@ npm start -w apps/server
 BASE_URL=http://localhost:4173 npm run test:browser
 ```
 
-Output: `apps/web/dist`. Set `VITE_SERVER_URL=wss://server.example` saat build untuk hosting publik; client membutuhkan HTTPS dan server WSS. Untuk LAN, gunakan IP host, buka port 5173 dan 2567. `localhost` pada perangkat lain menunjuk perangkat itu sendiri. TLS/public hosting belum disiapkan.
+Output: `apps/web/dist`. Set `VITE_SERVER_URL=wss://server.example` saat build untuk hosting publik; client membutuhkan HTTPS dan server WSS. Untuk LAN, gunakan IP host, buka port 5173 dan 2567. `localhost` pada perangkat lain menunjuk perangkat itu sendiri. Konfigurasi frontend Netlify dan blueprint backend tersedia; URL backend publik tetap harus disediakan oleh deployment. Lihat [panduan deployment](docs/DEPLOYMENT.md).
 
 ## Membangun ulang aset
 
@@ -116,3 +116,7 @@ npm run test:match
 ```
 
 Uji dua browser + 12 bot dari lobby hingga hasil dan rematch. `tests/match.test.ts` juga menjalankan pertandingan 14 bot dengan kontrol tervalidasi hingga gol kedua tim, penyelamatan keeper dan tangkapan final. Model bot memakai LOD berig 4.957 segitiga dengan satu klip Flight; model pemain utama mempertahankan delapan klip. Bangun ulang dengan Blender background memakai `assets-source/build_lod.py`.
+
+## Perbaikan startup produksi
+
+Build produksi tidak lagi menebak backend `domain-frontend:2567`. `VITE_SERVER_URL` wajib menunjuk backend HTTPS/WSS yang sebenarnya. Konfigurasi hilang langsung menampilkan pesan; koneksi macet dibatasi 15 detik dan dibersihkan. Tahap koneksi dan pemuatan aset terpisah, dengan batas 90 detik untuk arena. Practice tetap berjalan tanpa backend. Detail dan langkah verifikasi di [DEPLOYMENT.md](docs/DEPLOYMENT.md).
