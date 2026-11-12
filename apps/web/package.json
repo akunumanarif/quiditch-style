@@ -1,0 +1,19 @@
+{
+  "name": "@broom/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@babylonjs/core": "9.35.0",
+    "@babylonjs/havok": "^1.3.0",
+    "@babylonjs/loaders": "^9.35.0",
+    "@colyseus/sdk": "0.18.10"
+  },
+  "devDependencies": {
+    "vite": "^6.4.0"
+  }
+}

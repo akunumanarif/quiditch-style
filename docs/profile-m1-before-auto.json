@@ -1,0 +1,74 @@
+{
+  "milestone": "M1",
+  "recordedAt": "2026-11-12T06:21:09.014Z",
+  "browser": "158.0.8127.18",
+  "environment": "Headless Chromium, localhost, 1440x1000; GPU/headless results are not target-device release benchmarks",
+  "practice": {
+    "renderer": "WebGL2",
+    "fps": 7.916611690196582,
+    "p95": 232.20000004768372,
+    "meshes": 25,
+    "physics": "Havok V2",
+    "glbLoadMs": 2330.7999999523163,
+    "glbStatus": "Loaded rigged rider PBR GLB",
+    "visuals": {
+      "skyLoaded": true,
+      "riggedPilots": 1,
+      "animationClips": [
+        "Flight",
+        "Boost",
+        "Brake",
+        "Ascend",
+        "Descend",
+        "BankLeft",
+        "BankRight",
+        "Recover"
+      ],
+      "materials": 22,
+      "quality": "Medium",
+      "drawCalls": 38,
+      "vertices": 104358,
+      "activeMeshes": 22
+    },
+    "sphereY": 2.75,
+    "pilots": [
+      {
+        "id": "local",
+        "name": "Skyfarer",
+        "team": "auric",
+        "role": "Striker",
+        "x": 0,
+        "y": 13,
+        "z": 22.666666666666636,
+        "vx": 0,
+        "vy": 0,
+        "vz": 1.4162089697337885e-19,
+        "yaw": 0,
+        "pitch": 0,
+        "energy": 100,
+        "recovery": 0,
+        "seq": 115
+      }
+    ],
+    "ready": true,
+    "courseFinished": false,
+    "elapsed": 16.104800000190735
+  },
+  "readiness": {
+    "version": 1,
+    "renderer": "WebGL2 available",
+    "maxTextureSize": 8192,
+    "hardwareConcurrencyHint": 10,
+    "deviceMemoryBucketGB": 16,
+    "p95Ms": 21.1,
+    "frames": 45,
+    "skipped": false,
+    "time": "2026-11-12T06:19:36.096Z"
+  },
+  "multiplayer": {
+    "clients": 2,
+    "pilotCount": 2,
+    "movementSynced": true
+  },
+  "errors": []
+}

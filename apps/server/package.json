@@ -1,0 +1,13 @@
+{
+  "name": "@broom/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@colyseus/core": "0.18.28",
+    "@colyseus/ws-transport": "^0.18.0"
+  }
+}

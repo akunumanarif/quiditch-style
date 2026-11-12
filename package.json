@@ -1,0 +1,39 @@
+{
+  "name": "broom-league",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/web",
+    "apps/server"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n server,web \"npm run dev -w apps/server\" \"npm run dev -w apps/web\"",
+    "build": "npm run typecheck && npm run build -w apps/web",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "lint": "eslint .",
+    "format": "prettier --write apps packages tests docs README.md",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build -w apps/web",
+    "test:browser": "node tests/browser.mjs",
+    "assets:build": "python3 assets-source/build_assets.py",
+    "assets:fetch": "python3 assets-source/fetch_materials.py",
+    "test:flight": "node tests/flight-browser.mjs",
+    "test:aero": "node tests/aerodynamics-browser.mjs",
+    "test:roll": "node tests/roll-browser.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.0",
+    "node": "^22.23.5",
+    "prettier": "^3.6.0",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

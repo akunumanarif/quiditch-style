@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "milestone": "M1",
+  "assets": [
+    {
+      "id": "windmere-rider",
+      "url": "/assets/windmere-rider.glb",
+      "source": "assets-source/build_pilot.py",
+      "blendSource": "assets-source/windmere-rider.blend",
+      "bytes": 1349828,
+      "sha256": "2e1d2540821cc9acda4461232ceb80b1f4e0a7d8c8b74523b2213ce9fc97020d",
+      "triangles": 21024,
+      "meshParts": 9,
+      "joints": 12,
+      "animations": [
+        "Flight",
+        "Boost",
+        "Brake",
+        "Ascend",
+        "Descend",
+        "BankLeft",
+        "BankRight",
+        "Recover"
+      ],
+      "provenance": "Original Blender-authored athlete and broom; embedded CC0 leather texture from Poly Haven",
+      "status": "M1 game asset; further art polish pending"
+    },
+    {
+      "id": "windmere-stadium",
+      "source": "apps/web/src/environment.ts",
+      "provenance": "Original modular geometry with local CC0 texture scans; static geometry batched by material"
+    },
+    {
+      "id": "menu-cover",
+      "url": "/assets/windmere-menu.jpg",
+      "provenance": "Unmodified in-engine capture of this project, High graphics; no full arena loads in menu",
+      "bytes": 391138
+    }
+  ]
+}

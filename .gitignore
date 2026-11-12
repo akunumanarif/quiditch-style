@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+playwright-report/
+test-results/
+*.blend1
+PRD_Fantasy_Broom_Sports_Browser_Game.md
+
