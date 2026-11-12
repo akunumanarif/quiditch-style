@@ -39,6 +39,22 @@ try {
   await ready(host);
   await host.screenshot({ path: "docs/screenshots/m2-lobby.png" });
   assert.equal(await host.locator(".roster-row").count(), 14);
+  assert.equal(await host.locator("#match-start").isDisabled(), true);
+  assert.match(await host.locator(".is-me").textContent(), /HOST.*BELUM READY/);
+  assert.match(
+    await host.locator("#lobby-start-status").textContent(),
+    /Kamu adalah host.*Klik Ready/,
+  );
+  await host.locator("#match-ready").click();
+  await host.waitForFunction(
+    () => !document.querySelector("#match-start").disabled,
+  );
+  assert.match(await host.locator(".is-me").textContent(), /HOST.*READY/);
+  await host.locator("#match-ready").click();
+  await host.waitForFunction(
+    () => document.querySelector("#match-start").disabled,
+  );
+
   await host.locator("#match-duration").selectOption("60");
   await host.locator("#match-invite").click();
   const invite = await host.evaluate(() => navigator.clipboard.readText());
@@ -59,11 +75,25 @@ try {
   );
   console.log("QA: two-player lobby ready");
   await host.locator("#match-ready").click();
+  await host.waitForFunction(
+    () =>
+      document.querySelector("#match-ready").getAttribute("aria-pressed") ===
+      "true",
+  );
+  assert.equal(await host.locator("#match-start").isDisabled(), true);
+  assert.match(
+    await host.locator("#lobby-start-status").textContent(),
+    /Menunggu Ready dari/,
+  );
+  assert.equal(await guest.locator("#match-start").count(), 0);
   await guest.locator("#match-ready").click();
   await host.waitForFunction(() =>
     window.broomDebug.metrics.match.roster
       .filter((m) => !m.bot)
       .every((m) => m.ready),
+  );
+  await host.waitForFunction(
+    () => !document.querySelector("#match-start").disabled,
   );
   await host.locator("#match-start").click();
   await host.waitForFunction(
@@ -99,6 +129,7 @@ try {
   await host.locator("#match-ready").waitFor();
   await guest.locator("#match-ready").waitFor();
   assert.equal(await host.locator(".roster-row").count(), 14);
+  assert.equal(await host.locator("#match-start").isDisabled(), true);
   await writeFile(
     "docs/profile-match-headless.json",
     JSON.stringify(

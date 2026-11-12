@@ -7,6 +7,12 @@ import {
   type Pilot,
   type FlightInput,
 } from "../packages/shared/index.ts";
+import { angleDelta } from "../packages/shared/motion.ts";
+import {
+  advanceAerodynamics,
+  controlYaw,
+  flightYaw,
+} from "../packages/shared/aerodynamics.ts";
 const run = (p: Pilot, i: FlightInput, seconds: number) => {
   for (let n = 0; n < Math.round(seconds * 120); n++) stepFlight(p, i, 1 / 120);
 };
@@ -49,7 +55,7 @@ test("roll has angular inertia, finite acceleration and settles upright on relea
   assert.ok(Math.abs(p.bank) < 0.025);
   assert.ok(Math.abs(p.bankVelocity) < 0.03);
 });
-test("airspeed-dependent pressure adds roll resistance without sideways acceleration", () => {
+test("airspeed-dependent pressure adds roll resistance during a bank", () => {
   const hover = makePilot("hover"),
     fast = makePilot("fast");
   fast.vz = 30;
@@ -75,7 +81,7 @@ test("reduced motion retains deliberate A/D attitude while suppressing extra tor
   assert.ok(Math.abs(pose.bank.value) < 0.02);
 });
 
-test("W plus A/D redirects thrust diagonally toward the lean while preserving facing", () => {
+test("W plus A/D rolls into a coordinated curved turn at different initial headings", () => {
   for (const yaw of [0, Math.PI / 2])
     for (const direction of [-1, 1]) {
       const p = makePilot("diagonal");
@@ -89,12 +95,12 @@ test("W plus A/D redirects thrust diagonally toward the lean while preserving fa
       );
       assert.ok(forward > 5, "diagonal flight must retain forward motion");
       assert.ok(
-        Math.abs(p.yaw - yaw) < 1e-9,
-        "bank must not rotate the facing",
+        direction * angleDelta(yaw, p.yaw) > 0.25,
+        "bank must turn the nose toward the arc",
       );
     }
 });
-test("banked thrust redirects gradually, coasts on release and stays within the speed bound", () => {
+test("bank-to-turn builds gradually, preserves coasting momentum and stays speed bounded", () => {
   const p = makePilot("gradual");
   run(p, { ...neutralInput(), forward: 1 }, 0.8);
   const before = p.vx;
@@ -111,6 +117,96 @@ test("banked thrust redirects gradually, coasts on release and stays within the 
   assert.ok(
     Math.abs(p.vx - previous) < 1,
     "releasing W must not cancel momentum",
+  );
+  assert.ok(Math.hypot(p.vx, p.vy, p.vz) <= 52.001);
+});
+
+test("bank turns while coasting without W and keeps the new course after roll-out", () => {
+  const p = makePilot("coast-turn");
+  p.z = -35;
+  p.vz = 24;
+  run(p, { ...neutralInput(), strafe: 1 }, 0.8);
+  assert.ok(p.yaw > 0.3);
+  assert.ok(p.vx > 3);
+  assert.ok(p.bankTurnRate > 0.1);
+  const turningYaw = p.yaw;
+  run(p, neutralInput(), 2);
+  assert.ok(p.yaw >= turningYaw);
+  assert.ok(Math.abs(p.bank) < 0.04);
+  const settledYaw = p.yaw;
+  run(p, neutralInput(), 0.5);
+  assert.ok(
+    Math.abs(angleDelta(settledYaw, p.yaw)) < 0.01,
+    "held mouse reference must not pull back toward the old course",
+  );
+});
+test("high speed requires a wider turn radius at the same physical bank", () => {
+  const slow = makePilot("slow"),
+    fast = makePilot("fast");
+  for (const p of [slow, fast]) {
+    p.bank = -0.8;
+    p.strafeAxis = 1;
+    p.bankSteering = 1;
+  }
+  slow.vz = 15;
+  fast.vz = 35;
+  for (const p of [slow, fast])
+    advanceAerodynamics(p, { ...neutralInput(), strafe: 1 }, 1 / 120);
+  assert.ok(slow.bankTurnRate > fast.bankTurnRate);
+  assert.ok(35 / fast.bankTurnRate > 2 * (15 / slow.bankTurnRate));
+});
+test("mouse input and recenter remain relative to the banked heading across angle wrap", () => {
+  const p = makePilot("reference");
+  p.yaw = 3.1;
+  p.bankHeadingOffset = 2.8;
+  p.vz = -20;
+  const reference = controlYaw(p);
+  assert.ok(Math.abs(angleDelta(flightYaw(p, reference), p.yaw)) < 1e-10);
+  run(p, { ...neutralInput(), yaw: reference }, 0.6);
+  assert.ok(Math.abs(angleDelta(3.1, p.yaw)) < 0.01);
+  run(p, { ...neutralInput(), yaw: reference + 0.35 }, 0.6);
+  assert.ok(angleDelta(3.1, p.yaw) > 0.3);
+  const recentered = controlYaw(p);
+  const heading = p.yaw;
+  run(p, { ...neutralInput(), yaw: recentered }, 0.3);
+  assert.ok(Math.abs(angleDelta(heading, p.yaw)) < 0.01);
+});
+test("quick turn after a bank does not snap back when normal input resumes", () => {
+  const p = makePilot("bank-then-Q");
+  p.z = -35;
+  p.vz = 22;
+  run(p, { ...neutralInput(), strafe: -1 }, 0.7);
+  run(p, neutralInput(), 1.2);
+  const command = { ...neutralInput(), yaw: controlYaw(p), quickTurn: true };
+  stepFlight(p, command, 1 / 120);
+  assert.equal(p.turnCount, 1);
+  command.yaw = controlYaw(p, p.turnTargetYaw);
+  run(p, command, 0.9);
+  const heading = p.yaw;
+  run(p, { ...neutralInput(), yaw: command.yaw }, 0.5);
+  assert.ok(Math.abs(angleDelta(heading, p.yaw)) < 0.025);
+});
+test("prolonged bank turns remain finite across heading wraps without speed exploits", () => {
+  const p = makePilot("circles");
+  p.vz = 25;
+  for (let n = 0; n < 2400; n++)
+    advanceAerodynamics(
+      p,
+      { ...neutralInput(), forward: 1, strafe: n < 1200 ? 1 : -1, boost: true },
+      1 / 120,
+    );
+  assert.ok(
+    [
+      p.yaw,
+      p.bankHeadingOffset,
+      p.bankTurnRate,
+      p.vx,
+      p.vz,
+      p.loadFactor,
+    ].every(Number.isFinite),
+  );
+  assert.ok(
+    Math.abs(p.yaw) <= Math.PI && Math.abs(p.bankHeadingOffset) <= Math.PI,
   );
   assert.ok(Math.hypot(p.vx, p.vy, p.vz) <= 52.001);
 });

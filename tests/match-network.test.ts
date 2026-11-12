@@ -45,7 +45,9 @@ test(
         b: MatchSnapshot | undefined;
       h.onMessage("welcome", (d: { invite: string }) => (invite = d.invite));
       h.onMessage("snapshot", (d: { match: MatchSnapshot }) => (a = d.match));
-      h.onMessage("notice", () => {});
+      const hostNotices: string[] = [],
+        guestNotices: string[] = [];
+      h.onMessage("notice", (message: string) => hostNotices.push(message));
       await until(() => !!a && !!invite);
       assert.equal(a!.roster.length, 14);
       assert.equal(a!.roster.filter((m) => m.bot).length, 13);
@@ -57,18 +59,40 @@ test(
         "snapshot",
         (d: { match: MatchSnapshot }) => (b = d.match),
       );
-      guest.onMessage("notice", () => {});
+      guest.onMessage("notice", (message: string) =>
+        guestNotices.push(message),
+      );
       await until(() => a!.roster.filter((m) => !m.bot).length === 2 && !!b);
       guest.send("configure", 60);
       guest.send("start");
       await delay(150);
       assert.equal(a!.duration, 600);
       assert.equal(a!.phase, "LOBBY");
+      assert.ok(
+        guestNotices.some(
+          (message) =>
+            message === "Hanya host yang dapat memulai pertandingan.",
+        ),
+      );
       h.send("configure", 60);
       h.send("start");
       await delay(150);
       assert.equal(a!.phase, "LOBBY");
+      assert.ok(
+        hostNotices.some((message) =>
+          message.includes("Kamu adalah host. Klik Ready"),
+        ),
+      );
+      assert.equal(a!.hostId, h.sessionId);
       h.send("ready", true);
+      await until(() => a!.roster.find((m) => m.id === h.sessionId)!.ready);
+      h.send("start");
+      await until(() =>
+        hostNotices.some((message) =>
+          message.includes("Menunggu Ready dari: Guest"),
+        ),
+      );
+      assert.equal(a!.phase, "LOBBY");
       guest.send("ready", true);
       await until(() => a!.roster.filter((m) => !m.bot).every((m) => m.ready));
       h.send("start");

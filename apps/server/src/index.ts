@@ -1,3 +1,4 @@
+import { controlYaw } from "../../../packages/shared/aerodynamics.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { MatchRoom } from "./rooms/MatchRoom.ts";
 import { Server, Room, type Client } from "@colyseus/core";
@@ -57,7 +58,7 @@ class FlightRoom extends Room {
         const i =
           Date.now() - (this.lastInput.get(id) || 0) < 300
             ? this.flightInputs.get(id) || neutralInput()
-            : { ...neutralInput(), yaw: p.yaw };
+            : { ...neutralInput(), yaw: controlYaw(p) };
         stepFlight(p, i, 1 / 30, this.tick / 30);
       }
       this.tick++;

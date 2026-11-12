@@ -1125,3 +1125,14 @@ kbd {
   font: 11px monospace;
   line-height: 1.8;
 }
+
+.lobby-buttons button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: saturate(0.35);
+}
+#lobby-start-status {
+  color: #edcf95;
+  margin: 14px 0;
+  font-size: 13px;
+}

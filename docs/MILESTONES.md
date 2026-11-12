@@ -58,3 +58,7 @@ The latest user clarification changes the prior attitude-only-with-thrust behavi
 - Automated simulation reaches actual goals by both teams, Keeper saves and a final catch. Additional unit tests cover state/scoring/replays/cooldowns/roles/rematch. Network test covers mixed roster, host/start gates, invite, locked late joins and bot replacement.
 
 Remaining M2 tuning: difficulty/strategy balance, refined keeper dive animation, richer ball/VFX/audio and bespoke seeker chase drills. These do not block completing a friendly match. Public deployment, prediction/reconciliation, full synchronized cinematics and target-device/load acceptance remain later milestones.
+
+## Latest flight contract · coordinated bank-to-turn
+
+Supersedes the earlier diagonal-thrust and fixed-facing control passes above. A/D now bank and turn the actual heading/velocity arc while moving, with throttle-independent coasting turns, gradual roll-out and course retention. Stationary hover remains attitude-only. Nose-directed W thrust, pressure-dependent roll, wider high-speed radius, vertical support, E descend, R and Q remain supported. Shared input heading is a reference plus authoritative bank offset; inverse mapping prevents recenter, Q completion, stale input or bot replacement from undoing the turn. 52 unit/integration tests cover the updated model.

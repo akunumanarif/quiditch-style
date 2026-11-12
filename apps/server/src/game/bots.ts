@@ -1,3 +1,4 @@
+import { controlYaw } from "../../../../packages/shared/aerodynamics.ts";
 import {
   neutralInput,
   type FlightInput,
@@ -31,7 +32,7 @@ function steer(m: MatchMember, target: Vec3, boost = false): FlightInput {
     ...neutralInput(),
     forward,
     lift,
-    yaw,
+    yaw: controlYaw(p, yaw),
     pitch: 0,
     boost: boost && range > 15 && error < 0.5 && p.energy > 22,
     seq: p.seq + 1,

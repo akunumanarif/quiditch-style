@@ -1,3 +1,4 @@
+import { controlYaw } from "../../../../packages/shared/aerodynamics.ts";
 import {
   CAPACITY,
   RULESET,
@@ -152,7 +153,7 @@ export class MatchSimulation {
       ...spot,
       yaw: sign > 0 ? 0 : Math.PI,
     });
-    m.input = { ...neutralInput(), yaw: m.pilot.yaw };
+    m.input = { ...neutralInput(), yaw: controlYaw(m.pilot) };
     m.cooldown = 0;
     m.blockUntil = 0;
     m.lastActionId = -1;
@@ -244,7 +245,11 @@ export class MatchSimulation {
     if (m) {
       m.connected = connected;
       if (!connected)
-        m.input = { ...neutralInput(), yaw: m.pilot.yaw, pitch: m.pilot.pitch };
+        m.input = {
+          ...neutralInput(),
+          yaw: controlYaw(m.pilot),
+          pitch: m.pilot.pitch,
+        };
     }
     if (!connected && this.hostId === id) {
       this.hostId =
@@ -285,14 +290,23 @@ export class MatchSimulation {
     this.duration = duration;
     return true;
   }
+  startBlockReason(id: string): string | null {
+    if (this.phase !== "LOBBY")
+      return "Pertandingan sudah dimulai. Tunggu hasil untuk rematch.";
+    if (id !== this.hostId)
+      return "Hanya host yang dapat memulai pertandingan.";
+    const humans = [...this.players.values()].filter((m) => !m.bot);
+    if (humans.some((m) => !m.connected))
+      return "Menunggu pemain yang sedang menyambung kembali.";
+    const waiting = humans.filter((m) => !m.ready);
+    if (waiting.some((m) => m.pilot.id === id))
+      return "Kamu adalah host. Klik Ready terlebih dahulu, lalu Mulai pertandingan.";
+    if (waiting.length)
+      return `Menunggu Ready dari: ${waiting.map((m) => m.pilot.name).join(", ")}.`;
+    return null;
+  }
   start(id: string) {
-    if (this.phase !== "LOBBY" || id !== this.hostId) return false;
-    if (
-      [...this.players.values()].some(
-        (m) => !m.bot && (!m.connected || !m.ready),
-      )
-    )
-      return false;
+    if (this.startBlockReason(id)) return false;
     this.fillBots();
     this.phase = "COUNTDOWN";
     this.countdown = 3;
@@ -739,7 +753,7 @@ export class MatchSimulation {
       const input =
         m.connected && this.clock - m.lastInputAt < 0.35
           ? m.input
-          : { ...neutralInput(), yaw: m.pilot.yaw, pitch: 0 };
+          : { ...neutralInput(), yaw: controlYaw(m.pilot), pitch: 0 };
       stepFlight(m.pilot, input, dt, this.clock);
     }
     this.playerContacts();

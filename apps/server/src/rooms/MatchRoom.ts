@@ -47,7 +47,8 @@ export class MatchRoom extends Room {
       if (this.permit(c) && !this.game.start(c.sessionId))
         c.send(
           "notice",
-          "Hanya host dapat mulai. Semua pemain manusia perlu Ready.",
+          this.game.startBlockReason(c.sessionId) ||
+            "Pertandingan belum bisa dimulai.",
         );
     });
     this.onMessage("rematch", (c) => {

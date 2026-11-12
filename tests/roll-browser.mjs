@@ -14,7 +14,7 @@ await context.addInitScript(() =>
     "broomleague:settings:v1",
     JSON.stringify({
       version: 1,
-      name: "Manual roll QA",
+      name: "Bank-to-turn QA",
       quality: "Low",
       audio: false,
       bindings: {
@@ -92,18 +92,51 @@ try {
   const thrust = await get();
   assert.ok(thrust.pilots[0].forwardAxis > 0.9);
   assert.ok(
-    Math.abs(thrust.pilots[0].yaw - start.pilots[0].yaw) < 0.01,
-    "banked thrust must preserve the facing",
+    thrust.pilots[0].yaw < start.pilots[0].yaw - 0.08,
+    "banked thrust must turn the nose left",
   );
-  assert.ok(thrust.pilots[0].vx < -0.8, "W+A must travel diagonally left");
-  assert.ok(thrust.pilots[0].vz > 2, "W+A must still advance");
+  assert.ok(thrust.pilots[0].vx < -0.8, "W+A must bend the trajectory left");
+  assert.ok(thrust.pilots[0].vz > 2, "bank turn retains forward travel");
   await page.keyboard.up("KeyA");
+  await page.keyboard.up("KeyW");
+  const coastStart = (await get()).pilots[0].yaw;
+  await page.keyboard.down("KeyA");
+  await page.waitForTimeout(450);
+  const coast = await get();
+  assert.ok(
+    coast.pilots[0].yaw < coastStart - 0.1,
+    "A must keep turning while coasting without W",
+  );
+  await page.keyboard.up("KeyA");
+  await page.waitForTimeout(1500);
+  const course = await get();
+  await page.waitForTimeout(350);
+  const heldCourse = await get();
+  assert.ok(
+    Math.abs(heldCourse.pilots[0].yaw - course.pilots[0].yaw) < 0.03,
+    "roll-out must retain the new heading",
+  );
+  await page.keyboard.press("KeyR");
+  await page.waitForTimeout(350);
+  const recentered = await get();
+  assert.ok(
+    Math.abs(recentered.pilots[0].yaw - heldCourse.pilots[0].yaw) < 0.03,
+    "R must not undo a bank turn",
+  );
+  await page.keyboard.down("KeyW");
   await page.keyboard.down("KeyD");
   await page.waitForTimeout(1800);
   const diagonalRight = await get();
-  assert.ok(diagonalRight.pilots[0].vx > 2, "W+D must travel diagonally right");
-  assert.ok(diagonalRight.pilots[0].vz > 2);
-  assert.ok(Math.abs(diagonalRight.pilots[0].yaw - start.pilots[0].yaw) < 0.01);
+  const rightDelta = Math.atan2(
+    Math.sin(diagonalRight.pilots[0].yaw - recentered.pilots[0].yaw),
+    Math.cos(diagonalRight.pilots[0].yaw - recentered.pilots[0].yaw),
+  );
+  assert.ok(rightDelta > 0.3, "D must turn right from the new banked course");
+  assert.ok(
+    Math.abs(diagonalRight.controls.heading - diagonalRight.pilots[0].yaw) <
+      0.1,
+    "input heading must follow banked flight",
+  );
   await page.keyboard.up("KeyD");
   await page.keyboard.up("KeyW");
   await page.getByRole("button", { name: "ESC · SETTINGS" }).click();
@@ -133,6 +166,9 @@ try {
         descend: descend.pilots[0],
         thrust: thrust.pilots[0],
         diagonalRight: diagonalRight.pilots[0],
+        coast: coast.pilots[0],
+        retainedCourse: heldCourse.pilots[0].yaw,
+        recentered: recentered.pilots[0].yaw,
         fps: thrust.fps,
         reducedMotionManualBank: reduced.motion.bank.value,
         errors,
@@ -145,7 +181,7 @@ try {
     JSON.stringify({
       status: "PASS",
       checks:
-        "A/D attitude-only, no yaw/side-thrust, angular settling, rig secondary motion, persisted Ctrl-to-E migration, E descend and W+A/W+D diagonal thrust",
+        "hover roll, bank-to-turn both sides, coasting turn, course retention, R recenter, rig motion, Ctrl-to-E migration and E descend",
       leftDegrees: (left.pilots[0].bank * 180) / Math.PI,
       rightDegrees: (right.pilots[0].bank * 180) / Math.PI,
       fps: thrust.fps,

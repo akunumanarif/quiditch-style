@@ -71,6 +71,18 @@ export function createMatchUI(
     if (s.phase === "LOBBY") {
       if (key === rosterKey) return;
       rosterKey = key;
+      const humans = s.roster.filter((m) => !m.bot);
+      const waiting = humans.filter((m) => !m.ready || !m.connected);
+      const canStart = host && humans.length > 0 && waiting.length === 0;
+      const startStatus = !self?.ready
+        ? `${host ? "Kamu adalah host. " : ""}Klik Ready setelah memilih tim dan role.${host ? " Setelah itu klik Mulai pertandingan." : ""}`
+        : waiting.some((m) => !m.connected)
+          ? "Menunggu pemain yang sedang menyambung kembali."
+          : waiting.length
+            ? `Menunggu Ready dari: ${waiting.map((m) => m.name).join(", ")}.`
+            : host
+              ? "Semua pemain siap. Klik Mulai pertandingan."
+              : "Semua pemain siap. Menunggu host memulai pertandingan.";
       panel.innerHTML = `<section class="match-lobby"><div class="eyebrow">PRIVATE MATCH / 7 V 7</div><h2>Choose your place in the sky.</h2><p>Slot kosong diisi bot. Undang teman sebelum kick-off; bot akan menyerahkan slotnya.</p><div class="team-rosters">${(
         ["auric", "verdant"] as const
       )
@@ -80,13 +92,13 @@ export function createMatchUI(
               .filter((m) => m.team === team)
               .map(
                 (m) =>
-                  `<div class="roster-row ${m.id === self?.id ? "is-me" : ""}"><span>${escape(m.name)} <small>${m.bot ? "BOT" : m.connected ? (m.ready ? "READY" : "PLAYER") : "RECONNECTING"}</small></span><b>${m.role}</b></div>`,
+                  `<div class="roster-row ${m.id === self?.id ? "is-me" : ""}"><span>${escape(m.name)} <small>${m.id === s.hostId ? "HOST · " : ""}${m.bot ? "BOT" : m.connected ? (m.ready ? "READY" : "BELUM READY") : "RECONNECTING"}</small></span><b>${m.role}</b></div>`,
               )
               .join("")}</div>`,
         )
         .join(
           "",
-        )}</div><div class="lobby-controls"><label>Tim<select id="match-team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select></label><label>Role<select id="match-role">${["Striker", "Warden", "Keeper", "Seeker"].map((r) => `<option>${r}</option>`).join("")}</select></label><label>Durasi<select id="match-duration" ${host ? "" : "disabled"}><option value="60">1 menit</option><option value="300">5 menit</option><option value="600">10 menit</option></select></label><button class="outline" id="match-invite">Copy invite ↗</button></div><p class="match-rules">Gol +10 · Aurel Wing +30 dan pertandingan berakhir · Skor tertinggi menang</p><div class="lobby-buttons"><button class="primary" id="match-ready">${self?.ready ? "Batalkan ready" : "Ready"}</button>${host ? '<button class="primary" id="match-start">Mulai pertandingan →</button>' : "<span>Menunggu host memulai…</span>"}<button class="text-button" id="match-leave">Keluar</button></div></section>`;
+        )}</div><div class="lobby-controls"><label>Tim<select id="match-team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select></label><label>Role<select id="match-role">${["Striker", "Warden", "Keeper", "Seeker"].map((r) => `<option>${r}</option>`).join("")}</select></label><label>Durasi<select id="match-duration" ${host ? "" : "disabled"}><option value="60">1 menit</option><option value="300">5 menit</option><option value="600">10 menit</option></select></label><button class="outline" id="match-invite">Copy invite ↗</button></div><p class="match-rules">Gol +10 · Aurel Wing +30 dan pertandingan berakhir · Skor tertinggi menang</p><p id="lobby-start-status" role="status" aria-live="polite">${escape(startStatus)}</p><div class="lobby-buttons"><button class="primary" id="match-ready" aria-pressed="${!!self?.ready}">${self?.ready ? "Batalkan ready" : "Ready"}</button>${host ? `<button class="primary" id="match-start" ${canStart ? "" : "disabled"} aria-describedby="lobby-start-status">Mulai pertandingan →</button>` : "<span>Menunggu host memulai…</span>"}<button class="text-button" id="match-leave">Keluar</button></div></section>`;
       const select = (id: string) =>
         panel!.querySelector<HTMLSelectElement>(id)!;
       select("#match-team").value = self?.team || "auric";
@@ -161,7 +173,7 @@ export function createMatchUI(
           ? ""
           : `${self?.role === "Seeker" ? "✦ TARGET" : self?.role === "Warden" ? "◆ HAZARD" : "● BOLA"} · ${Math.round(range)} m · ${Math.abs(bearing) < 0.2 ? "di depan" : bearing > 0 ? "kanan" : "kiri"} ${Math.round((Math.abs(bearing) * 180) / Math.PI)}° · ${dy > 0 ? "↑" : "↓"}${Math.round(Math.abs(dy))} m`;
 
-      panel.innerHTML = `<div class="match-score"><b class="auric">AURIC ${s.scores.auric}</b><span>${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}</span><b class="verdant">${s.scores.verdant} VERDANT</b></div>${s.phase === "COUNTDOWN" ? `<div class="match-countdown"><small>KICK-OFF</small>${Math.ceil(s.countdown) || "GO"}</div>` : ""}<div class="match-status"><b>${self?.team.toUpperCase()} · ${self?.role}</b><span>${owner ? `Bola: ${escape(owner.name)}` : s.ball.mode === "reset" ? "Gol! Bola kembali ke tengah…" : "Bola bebas · kejar penanda merah"}</span><span>${s.target.state === "hidden" ? "Aurel Wing belum muncul" : s.target.state === "catchable" ? "AUREL WING · BISA DITANGKAP" : "Aurel Wing sedang terbang"}</span><span class="tracking-hint">${tracker}</span><small>${self?.role === "Warden" ? `${actionKey} tangkis · Klik kiri pukul hazard` : self?.role === "Seeker" ? `${actionKey} / Klik kiri tangkap target dalam jarak 3 m` : `${actionKey} ambil / rebut / oper · Klik kiri tembak`}<br>W thrust · A/D lean · SPACE naik · E turun · Q putar balik</small></div><div class="match-feed">${s.events
+      panel.innerHTML = `<div class="match-score"><b class="auric">AURIC ${s.scores.auric}</b><span>${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}</span><b class="verdant">${s.scores.verdant} VERDANT</b></div>${s.phase === "COUNTDOWN" ? `<div class="match-countdown"><small>KICK-OFF</small>${Math.ceil(s.countdown) || "GO"}</div>` : ""}<div class="match-status"><b>${self?.team.toUpperCase()} · ${self?.role}</b><span>${owner ? `Bola: ${escape(owner.name)}` : s.ball.mode === "reset" ? "Gol! Bola kembali ke tengah…" : "Bola bebas · kejar penanda merah"}</span><span>${s.target.state === "hidden" ? "Aurel Wing belum muncul" : s.target.state === "catchable" ? "AUREL WING · BISA DITANGKAP" : "Aurel Wing sedang terbang"}</span><span class="tracking-hint">${tracker}</span><small>${self?.role === "Warden" ? `${actionKey} tangkis · Klik kiri pukul hazard` : self?.role === "Seeker" ? `${actionKey} / Klik kiri tangkap target dalam jarak 3 m` : `${actionKey} ambil / rebut / oper · Klik kiri tembak`}<br>W thrust · A/D bank & turn · SPACE naik · E turun · Q putar balik</small></div><div class="match-feed">${s.events
         .slice(-3)
         .reverse()
         .map((e) => `<div>${escape(e.text)}</div>`)

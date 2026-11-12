@@ -1,19 +1,19 @@
 {
-  "recordedAt": "2026-11-12T08:54:48.465Z",
+  "recordedAt": "2026-11-12T09:10:32.854Z",
   "browser": "158.0.8127.18",
   "environment": "Headless Chromium localhost 1440x1000 Low; not target-device certification",
   "players": 2,
   "bots": 12,
   "live": {
-    "fps": 17.920076460013764,
-    "p95": 119.89999985694885,
+    "fps": 18.695083192564667,
+    "p95": 116.5,
     "visuals": {
       "skyLoaded": true,
       "airflow": {
         "visible": true,
-        "alpha": 0.06470640587186358,
+        "alpha": 0.06530263886982866,
         "count": 40,
-        "intensity": 0.06933147051331123
+        "intensity": 0.07359027764163328
       },
       "riggedPilots": 14,
       "torsoSecondaryMotion": 14,
@@ -36,7 +36,7 @@
   },
   "result": {
     "phase": "ENDED",
-    "hostId": "uNzYQpVfN",
+    "hostId": "n8yac1XrN",
     "duration": 60,
     "remaining": 35.93333333333298,
     "countdown": 0,
@@ -48,7 +48,7 @@
     "reason": "Aurel Wing tertangkap",
     "roster": [
       {
-        "id": "uNzYQpVfN",
+        "id": "n8yac1XrN",
         "name": "Test Pilot",
         "team": "auric",
         "role": "Striker",
@@ -61,7 +61,7 @@
         "catches": 0
       },
       {
-        "id": "TW0h8jtH4",
+        "id": "M2yY5lVtC",
         "name": "Test Pilot",
         "team": "verdant",
         "role": "Seeker",
@@ -231,42 +231,42 @@
       }
     ],
     "ball": {
-      "x": -2.9338744365553397,
-      "y": 17.72432014687391,
-      "z": -39.90566361323876,
-      "vx": 2.609806870353161,
-      "vy": -0.32443505005960516,
-      "vz": 38.16052772957252,
+      "x": -1.3421668930497135,
+      "y": 17.723959041092137,
+      "z": -40.066943876524626,
+      "vx": 2.600183380279214,
+      "vy": -0.40931972259349675,
+      "vz": 38.162518272977486,
       "owner": "bot-verdant-1",
       "mode": "carried",
-      "age": 6.299999999999987,
+      "age": 6.399999999999987,
       "lastTouch": "bot-verdant-1",
       "lastTeam": "verdant"
     },
     "hazards": [
       {
         "id": "hazard-0",
-        "x": 24.71650706654635,
-        "y": 28.51345737074043,
-        "z": 12.63244048015513,
-        "vx": -7.756335674629575,
-        "vy": -2.4090801123256,
-        "vz": 3.0997525258348677,
+        "x": 24.916373584849357,
+        "y": 27.937111674451128,
+        "z": 14.729296445392839,
+        "vx": -6.758170496391867,
+        "vy": -3.20865212160887,
+        "vz": 4.583510560733032,
         "team": null,
-        "grace": 0.6333333333333329,
-        "lastHit": "TW0h8jtH4"
+        "grace": 0.49999999999999956,
+        "lastHit": "M2yY5lVtC"
       },
       {
         "id": "hazard-1",
-        "x": 27.17619778511267,
-        "y": 29.156422154270377,
-        "z": 12.545368641088718,
-        "vx": -7.306837802505765,
-        "vy": -1.1789120205476007,
-        "vz": 4.806344777018825,
+        "x": 26.115850115321486,
+        "y": 29.012106547243373,
+        "z": 13.560239274558597,
+        "vx": -7.161566364375062,
+        "vy": -0.7921476487251364,
+        "vz": 5.011798080400494,
         "team": null,
-        "grace": 0.9333333333333328,
-        "lastHit": "TW0h8jtH4"
+        "grace": 0.7999999999999995,
+        "lastHit": "M2yY5lVtC"
       }
     ],
     "target": {
@@ -334,21 +334,21 @@
         "type": "block",
         "text": "Flint V menahan bola",
         "team": "verdant",
-        "time": 17.066666666666674
+        "time": 17.10000000000001
       },
       {
         "id": 15,
         "type": "steal",
         "text": "Ash A merebut bola",
         "team": "auric",
-        "time": 17.76666666666671
+        "time": 17.666666666666703
       },
       {
         "id": 16,
         "type": "steal",
         "text": "Briar V merebut bola",
         "team": "verdant",
-        "time": 17.76666666666671
+        "time": 17.666666666666703
       },
       {
         "id": 17,

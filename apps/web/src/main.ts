@@ -5,6 +5,8 @@ import "./style.css";
 import {
   FLIGHT_PHYSICS,
   keyboardTurnRate,
+  controlYaw,
+  flightYaw,
 } from "../../../packages/shared/aerodynamics.ts";
 import { clamp, damp, dampAngle } from "../../../packages/shared/motion.ts";
 import type { Room } from "@colyseus/sdk";
@@ -55,7 +57,7 @@ const matchUI = createMatchUI(
   () => ({
     id: me.id,
     pilot: me,
-    yaw,
+    yaw: flightYaw(me, yaw),
     pitch,
     interactKey: keyLabel(settings.bindings.interact),
   }),
@@ -191,7 +193,7 @@ function closeModal() {
 }
 function guide() {
   modal(
-    `<div class="eyebrow">FLIGHT SCHOOL / 01</div><h2>Find your wings.</h2><p>Terbang melewati enam waypoint berurutan. Klik arena untuk mengarahkan pandangan dengan mouse. Tahan W bersama A/D untuk terbang serong mengikuti kemiringan.</p><div class="control-grid"><kbd>W / S</kbd><span>Dorong / rem udara</span><kbd>A / D</kbd><span>Condong · W + A/D untuk serong</span><kbd>Q</kbd><span>Putar balik 180° · 24 energi</span><kbd>${keyLabel(settings.bindings.ascend)} / ${keyLabel(settings.bindings.descend)}</kbd><span>Naik / turun</span><kbd>SHIFT</kbd><span>Boost · memakai energi</span><kbd>← ↑ ↓ →</kbd><span>Arah alternatif tanpa mouse</span><kbd>R</kbd><span>Pusatkan arah</span><kbd>ESC</kbd><span>Pengaturan / lepas mouse</span><kbd>F3</kbd><span>Profiling</span></div><button class="primary" id="close">Ready to fly →</button>`,
+    `<div class="eyebrow">FLIGHT SCHOOL / 01</div><h2>Find your wings.</h2><p>Terbang melewati enam waypoint berurutan. Klik arena untuk mengarahkan pandangan dengan mouse. A/D memiringkan badan untuk berbelok mengikuti lengkungan. Saat meluncur tanpa W kamu tetap bisa berbelok.</p><div class="control-grid"><kbd>W / S</kbd><span>Dorong / rem udara</span><kbd>A / D</kbd><span>Condong & belok · bank-to-turn</span><kbd>Q</kbd><span>Putar balik 180° · 24 energi</span><kbd>${keyLabel(settings.bindings.ascend)} / ${keyLabel(settings.bindings.descend)}</kbd><span>Naik / turun</span><kbd>SHIFT</kbd><span>Boost · memakai energi</span><kbd>← ↑ ↓ →</kbd><span>Arah alternatif tanpa mouse</span><kbd>R</kbd><span>Pusatkan arah</span><kbd>ESC</kbd><span>Pengaturan / lepas mouse</span><kbd>F3</kbd><span>Profiling</span></div><button class="primary" id="close">Ready to fly →</button>`,
   );
   $("#close").onclick = closeModal;
 }
@@ -479,7 +481,7 @@ async function connect(kind: "create" | "join", id?: string, token?: string) {
           matchState?.phase === "LOBBY" ||
           matchState?.phase === "COUNTDOWN"
         ) {
-          yaw = me.yaw;
+          yaw = controlYaw(me);
           pitch = 0;
         }
       }
@@ -550,7 +552,7 @@ async function begin(
     simulationAccumulator = 0;
     observedTurnCount = me.turnCount;
     queuedQuickTurn = false;
-    yaw = me.yaw;
+    yaw = controlYaw(me);
     pitch = 0;
     resetFlightView();
     elapsed = 0;
@@ -601,7 +603,7 @@ async function begin(
   }
 }
 function hud() {
-  app.innerHTML = `<div class="flight-top"><div class="hud-brand">${emblem}<div>WINDMERE<small>${room ? "FRIENDLY MATCH / M2" : "PRACTICE / 60 SECOND TRIAL"}</small></div></div><div class="course-heading"><span id="trial-clock">FLIGHT TRAINING / 01:00</span><b id="objective">WAYPOINT 01 / 06</b></div><button class="outline" id="pause">ESC · SETTINGS</button></div><div class="wind-pressure" id="wind-pressure"></div><div class="air-feedback"><span id="air-readout">AIR 0 KM/H · 0 Pa · 1.0G</span><b id="turn-readout">Q · QUICK TURN READY</b></div><div class="reticle">＋</div><div id="waypoint" class="waypoint"><span>◇</span><small id="distance">100 m</small></div><div class="objective-panel"><span class="eyebrow">${room ? "SHARED SKIES" : "YOUR OBJECTIVE"}</span><h3>${room ? "Fly together." : "Follow the gold."}</h3><p>${room ? "Gerakan pilot disimulasikan server." : "Lewati waypoint emas. Selesaikan rute sebanyak mungkin dalam 60 detik."}</p><small id="course-stats">0 / 6 WAYPOINTS</small>${room ? '<button class="outline" id="copy">Copy invite link ↗</button><select id="team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select><select id="role"><option>Striker</option><option>Warden</option><option>Keeper</option><option>Seeker</option></select><small id="members"></small>' : ""}</div><div class="flight-bottom"><div class="speed"><b id="speed">00</b><span>KM/H<small id="altitude">ALT 13 M</small></span></div><div class="energy-wrap"><div><span>BOOST ENERGY</span><b id="energy-text">100%</b></div><div class="energy"><span id="energy-fill"></span></div><small>HOLD <kbd>SHIFT</kbd> TO BOOST · <kbd>S</kbd> AIRBRAKE</small></div><div class="flight-hints"><span><kbd>${keyLabel(settings.bindings.forward)}</kbd> THRUST · <kbd>${keyLabel(settings.bindings.left)} ${keyLabel(settings.bindings.right)}</kbd> LEAN</span><span><kbd>${keyLabel(settings.bindings.ascend)}</kbd> ASCEND</span><span><kbd>${keyLabel(settings.bindings.descend)}</kbd> DESCEND</span></div></div><div id="debug" hidden></div>`;
+  app.innerHTML = `<div class="flight-top"><div class="hud-brand">${emblem}<div>WINDMERE<small>${room ? "FRIENDLY MATCH / M2" : "PRACTICE / 60 SECOND TRIAL"}</small></div></div><div class="course-heading"><span id="trial-clock">FLIGHT TRAINING / 01:00</span><b id="objective">WAYPOINT 01 / 06</b></div><button class="outline" id="pause">ESC · SETTINGS</button></div><div class="wind-pressure" id="wind-pressure"></div><div class="air-feedback"><span id="air-readout">AIR 0 KM/H · 0 Pa · 1.0G</span><b id="turn-readout">Q · QUICK TURN READY</b></div><div class="reticle">＋</div><div id="waypoint" class="waypoint"><span>◇</span><small id="distance">100 m</small></div><div class="objective-panel"><span class="eyebrow">${room ? "SHARED SKIES" : "YOUR OBJECTIVE"}</span><h3>${room ? "Fly together." : "Follow the gold."}</h3><p>${room ? "Gerakan pilot disimulasikan server." : "Lewati waypoint emas. Selesaikan rute sebanyak mungkin dalam 60 detik."}</p><small id="course-stats">0 / 6 WAYPOINTS</small>${room ? '<button class="outline" id="copy">Copy invite link ↗</button><select id="team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select><select id="role"><option>Striker</option><option>Warden</option><option>Keeper</option><option>Seeker</option></select><small id="members"></small>' : ""}</div><div class="flight-bottom"><div class="speed"><b id="speed">00</b><span>KM/H<small id="altitude">ALT 13 M</small></span></div><div class="energy-wrap"><div><span>BOOST ENERGY</span><b id="energy-text">100%</b></div><div class="energy"><span id="energy-fill"></span></div><small>HOLD <kbd>SHIFT</kbd> TO BOOST · <kbd>S</kbd> AIRBRAKE</small></div><div class="flight-hints"><span><kbd>${keyLabel(settings.bindings.forward)}</kbd> THRUST · <kbd>${keyLabel(settings.bindings.left)} ${keyLabel(settings.bindings.right)}</kbd> BANK & TURN</span><span><kbd>${keyLabel(settings.bindings.ascend)}</kbd> ASCEND</span><span><kbd>${keyLabel(settings.bindings.descend)}</kbd> DESCEND</span></div></div><div id="debug" hidden></div>`;
   $("#pause").onclick = settingsDialog;
   if (room) {
     $("#copy").onclick = async () => {
@@ -728,7 +730,7 @@ function update() {
     }
     if (me.turnCount > observedTurnCount) {
       observedTurnCount = me.turnCount;
-      yaw = me.turnTargetYaw;
+      yaw = controlYaw(me, me.turnTargetYaw);
       audio.quickTurn();
     }
     world.updatePilots(
@@ -961,7 +963,7 @@ window.addEventListener("keydown", (e) => {
     else queuedQuickTurn = true;
   }
   if (e.code === settings.bindings.recenter) {
-    yaw = me.yaw;
+    yaw = controlYaw(me);
     pitch = 0;
   }
   if (e.code === "Escape" && mode === "flight" && !paused) settingsDialog();
@@ -1035,6 +1037,7 @@ Object.assign(window, {
             }
           : undefined,
         sphereY: world?.sphereY,
+        controls: { referenceYaw: yaw, heading: flightYaw(me, yaw) },
         pilots,
         match: matchState,
         ready,

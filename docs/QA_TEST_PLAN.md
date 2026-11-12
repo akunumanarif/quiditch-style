@@ -18,7 +18,7 @@ Manual gates: real GPU WebGPU, Safari/Firefox/Edge; pointer lock/trackpad/remapp
 
 ## Manual roll / E regression
 
-Unit tests compare hover trajectories with A/D versus neutral roll, verify no added movement without thrust, and require W+A/D to produce left/right forward-diagonal velocity at both north/east facing headings. They also verify gradual acceleration, retained momentum, speed bounds, visible roll, angular resistance and upright settling. Settings tests cover fresh E defaults, saved left/right Ctrl migration, collision with another E binding, persistence and corrupted preference isolation. test:roll exercises real keyboard A/D without thrust, W+A/W+D diagonal travel with unchanged facing, secondary torso rig, old Ctrl inactivity, E descent, and persisted migration in production preview.
+Unit tests compare stationary hover with and without A/D, require bank-directed heading and curved velocity at different initial headings, verify no-throttle coasting turns and course retention, speed-dependent radius, angle-wrap/recenter/Q compatibility, smooth roll and bounded prolonged turns. Network tests drive A/D through real Colyseus clients and verify both snapshots plus stale-input course retention. test:roll checks actual keyboard hover bank, moving turns, coasting, roll-out, R recenter, rig response, Ctrl migration, E descend and reduced motion in a production build.
 
 Intentional manual roll remains visible with Reduced Motion; only automatic sway, secondary torso motion and extra camera/wind effects are suppressed. This case is covered in unit and production-browser roll checks.
 
@@ -29,3 +29,9 @@ Intentional manual roll remains visible with Reduced Motion; only automatic sway
 `npm run test:match`: two isolated Chromium contexts join through invite, select a role, ready/start a 60-second configured match, render 14 animated riders, observe shared scores and target catch/results, then host rematches. The match can end before timer expiry through a valid catch. Real elapsed timer expiry is covered in fixed-step simulation, not claimed from this early-ending browser fixture. Screenshots: `m2-lobby.png`, `m2-match.png`, `m2-results.png`; JSON: `profile-match-headless.json`.
 
 Manual follow-up: play each role, mouse shooting accuracy, readable target labels, pressure feedback under load, slow/missing-packet behavior and target-device frame budget. No 14-human/public-server acceptance has been performed.
+
+## Lobby start clarity
+
+Host is explicitly marked `HOST` with `BELUM READY` / `READY`. The start button stays disabled until every human is ready and connected; the lobby explains whether the host must click Ready, another player is pending, or a connection is recovering. Server notices distinguish host authority from readiness, without changing the Ready requirement.
+
+The match browser fixture checks solo host Ready/unready enabling, blocked start while a guest is unready, hidden host controls for guests, successful start after both are ready, and disabled start again after rematch. The real network test also sends invalid start commands directly and verifies the exact, distinct rejection reasons.

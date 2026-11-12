@@ -20,7 +20,7 @@ The shared force model adds airSpeed, pressure, wind vector, loadFactor, bank an
 
 ## Manual roll semantics
 
-The existing bounded `strafe` input commands manual roll. Without positive forward thrust, it does not add yaw or sideways force. With W, the server redirects the normalized thrust vector toward the actual bank angle; the velocity-alignment target uses the same travel bearing. This produces forward-diagonal movement while preserving mouse/arrow-facing yaw. Authoritative `bankVelocity` and `rollLoad` retain angular inertia and pressure feedback. Q suppresses normal bank-directed thrust during its validated reversal.
+The bounded `strafe` input commands roll and coordinated bank-to-turn when moving, with no heading change below 3 m/s horizontal speed. Coasting turns do not require W. `yaw` is the mouse/arrow heading reference; server-owned `bankHeadingOffset` adds accumulated bank heading. Clients do not submit the offset. Snapshots also include `bankSteering` and `bankTurnRate`. Server stale-input braking and bot replacement use the inverse heading mapping so they preserve the current course. The server retains roll inertia, pressure feedback, lateral acceleration and speed limits. Q suppresses ordinary bank turns during its reversal.
 
 ## M2 match protocol
 

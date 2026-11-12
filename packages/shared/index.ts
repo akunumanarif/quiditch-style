@@ -42,6 +42,9 @@ export type Pilot = {
   acceleration: number;
   bank: number;
   bankVelocity: number;
+  bankHeadingOffset: number;
+  bankSteering: number;
+  bankTurnRate: number;
   rollLoad: number;
   turnRemaining: number;
   turnCooldown: number;
@@ -129,6 +132,9 @@ export function makePilot(
     acceleration: 0,
     bank: 0,
     bankVelocity: 0,
+    bankHeadingOffset: 0,
+    bankSteering: 0,
+    bankTurnRate: 0,
     rollLoad: 0,
     turnRemaining: 0,
     turnCooldown: 0,

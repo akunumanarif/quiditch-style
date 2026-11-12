@@ -11,6 +11,9 @@ export const FLIGHT_PHYSICS = {
   turnEnergy: 24,
   turnCooldown: 3,
   manualBankAngle: 0.96,
+  bankTurnGain: 1.2,
+  bankTurnMaxRate: 1.25,
+  bankTurnMinSpeed: 3,
 } as const;
 export function sampleWind(x: number, y: number, z: number, time: number) {
   const altitude = 1 + clamp(y / 100, 0, 0.7);
@@ -29,6 +32,15 @@ export function dynamicPressure(speed: number, height = 0) {
 }
 export function keyboardTurnRate(speed: number) {
   return 2.35 / (1 + Math.max(0, speed) * 0.025);
+}
+/** Input heading is a reference: bank turns accumulate without fighting a held mouse heading. */
+export function flightYaw(p: Pilot, reference: number) {
+  const yaw = reference + p.bankHeadingOffset;
+  return Math.atan2(Math.sin(yaw), Math.cos(yaw));
+}
+export function controlYaw(p: Pilot, heading = p.yaw) {
+  const yaw = heading - p.bankHeadingOffset;
+  return Math.atan2(Math.sin(yaw), Math.cos(yaw));
 }
 function step(p: Pilot, i: FlightInput, dt: number) {
   const cfg = FLIGHT_PHYSICS;
@@ -89,14 +101,21 @@ function step(p: Pilot, i: FlightInput, dt: number) {
       vx = p.vx;
     p.vx = (vx * cos + p.vz * sin) * loss;
     p.vz = (p.vz * cos - vx * sin) * loss;
-  } else p.yaw = dampAngle(p.yaw, i.yaw, 9, dt, keyboardTurnRate(airSpeed));
+  } else
+    p.yaw = dampAngle(
+      p.yaw,
+      flightYaw(p, i.yaw),
+      9,
+      dt,
+      keyboardTurnRate(airSpeed),
+    );
   const yawRate = angleDelta(previousYaw, p.yaw) / dt;
   const pitchTarget = clamp(i.pitch + p.liftAxis * 0.58, -1.03, 1.03);
   p.pitch = damp(p.pitch, pitchTarget, 6.5, dt);
   const heading = Math.atan2(p.vx, p.vz);
   const pressure = dynamicPressure(airSpeed, p.y),
     brake = Math.max(0, -p.forwardAxis);
-  // A/D alone controls attitude. Positive throttle couples the actual bank into thrust below.
+  // Mouse/arrow steering supplies presentation bank; manual roll also drives a coordinated turn.
   const automaticBank = -Math.atan2(
     yawRate * horizontalSpeed * 0.35,
     cfg.gravity,
@@ -126,24 +145,50 @@ function step(p: Pilot, i: FlightInput, dt: number) {
     12,
     dt,
   );
-  // Redirect the same thrust magnitude toward the lean; never add a separate strafe impulse.
-  // Mouse/arrow heading and Q remain independent of A/D attitude input.
-  const bankDeflection = turning
+  // Lift from the actual roll supplies centripetal acceleration while moving,
+  // independent of throttle. A low-speed dead zone preserves attitude-only hover.
+  // Steering authority fades with roll-out; automatic mouse bank cannot start a feedback loop.
+  p.bankSteering = damp(
+    p.bankSteering,
+    Math.abs(i.strafe) > 0.01 ? 1 : 0,
+    Math.abs(i.strafe) > 0.01 ? 12 : 3.5,
+    dt,
+  );
+  const authority = clamp((horizontalSpeed - cfg.bankTurnMinSpeed) / 5, 0, 1);
+  p.bankTurnRate = turning
     ? 0
-    : p.bank * Math.min(1, Math.abs(p.strafeAxis)) * Math.max(0, p.forwardAxis);
-  const travelYaw = p.yaw - bankDeflection;
-  const headingError = angleDelta(heading, travelYaw);
+    : clamp(
+        (-cfg.gravity *
+          Math.tan(p.bank) *
+          cfg.bankTurnGain *
+          p.bankSteering *
+          authority) /
+          Math.max(horizontalSpeed, 8),
+        -cfg.bankTurnMaxRate,
+        cfg.bankTurnMaxRate,
+      );
+  const bankDelta = p.bankTurnRate * dt;
+  p.bankHeadingOffset = Math.atan2(
+    Math.sin(p.bankHeadingOffset + bankDelta),
+    Math.cos(p.bankHeadingOffset + bankDelta),
+  );
+  p.yaw = Math.atan2(Math.sin(p.yaw + bankDelta), Math.cos(p.yaw + bankDelta));
+  const headingError = angleDelta(heading, p.yaw);
   const turnAcceleration = turning
     ? 0
-    : clamp(headingError * horizontalSpeed * 2.5, -18, 18);
+    : clamp(
+        p.bankTurnRate * horizontalSpeed + headingError * horizontalSpeed * 2.5,
+        -18,
+        18,
+      );
   const drag = ((pressure * cfg.dragArea) / cfg.massKg) * (1 + brake * 3.5);
   const dragRate = drag / Math.max(airSpeed, 0.1) + 0.1 + brake * 1.5;
   const thrust =
     (cfg.thrust + (cfg.boostThrust - cfg.thrust) * p.boostBlend) *
     Math.max(0, p.forwardAxis) *
     (turning ? 0.12 : 1);
-  const forwardX = Math.sin(travelYaw) * Math.cos(p.pitch),
-    forwardZ = Math.cos(travelYaw) * Math.cos(p.pitch);
+  const forwardX = Math.sin(p.yaw) * Math.cos(p.pitch),
+    forwardZ = Math.cos(p.yaw) * Math.cos(p.pitch);
   // Magical suspension supports hovering. In pitched fast flight gravity again trades speed for altitude.
   const speedBlend = clamp(horizontalSpeed / 18, 0, 1);
   const support =

@@ -16,7 +16,7 @@ Buka **http://localhost:5173**. Vite 5173 dan Colyseus 2567 dijalankan bersamaan
 ## Cara bermain
 
 1. Isi nama → **Quick practice** → readiness check → Continue. Menu memakai satu capture arena lokal yang ringan; arena penuh, tekstur dan Havok dimuat setelah readiness.
-2. **W** memberi dorongan, **S** rem udara, **A/D** condong kiri/kanan; **W+A/D** terbang serong, **Space** menanjak, **E** menukik/turun, **Shift kiri + W** boost, mouse/arrow keys untuk arah, **R** recenter. **Q** putar balik 180° (~0,8 detik, 24 energi, cooldown 3 detik); **Q sambil A** memilih arah putaran kiri. Klik canvas untuk mouse look.
+2. **W** memberi dorongan, **S** rem udara, **A/D** memiringkan badan untuk membelok mengikuti lengkungan, termasuk saat meluncur tanpa W, **Space** menanjak, **E** menukik/turun, **Shift kiri + W** boost, mouse/arrow keys untuk arah, **R** recenter. **Q** putar balik 180° (~0,8 detik, 24 energi, cooldown 3 detik); **Q sambil A** memilih arah putaran kiri. Klik canvas untuk mouse look.
 3. Lewati waypoint emas sebanyak mungkin dalam **60 detik**. Hasil menampilkan waypoint/lap dan menyediakan **Fly again**. Ini hasil latihan lokal, bukan skor pertandingan authoritative.
 4. **Esc → Settings** untuk grafik, sensitivitas, reduced motion, suara dan keyboard remapping. Klik nama tombol untuk mengubahnya, lalu Save. Pengaturan versi lama tetap dibaca dengan default aman.
 5. **Play 7v7 match** atau **Create room** → pilih tim/role/durasi → **Ready → Mulai pertandingan**. Host seorang diri cukup; bot mengisi slot kosong. Untuk teman: **Copy invite** → buka di browser/incognito kedua sebelum kick-off. Semua manusia harus Ready. Server match 30 Hz, snapshot 10 Hz.
@@ -47,7 +47,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-`check`: strict TypeScript, ESLint, 47 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
+`check`: strict TypeScript, ESLint, 52 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
 
 ```sh
 npm run build
@@ -82,7 +82,7 @@ Uji ini menekan kanan/kiri, naik/turun dan berbelok secara nyata di Chromium, la
 
 ## Aerodinamika dan rasa angin
 
-Gerakan memakai integrasi gaya pada 120 Hz: thrust, drag berbasis kuadrat airspeed, crosswind/gust, gravitasi serta bantuan hover fantasi. Lepas W untuk meluncur; tahan S untuk mengerem. Menukik menambah kecepatan, menanjak menghabiskan momentum, dan perubahan heading lewat mouse/panah memerlukan radius serta banking lebih besar. A/D hanya mengatur sudut kemiringan sampai ~55°: tanpa W tidak menambah yaw maupun dorongan samping; bersama W, dorongan dibelokkan mengikuti sudut kemiringan sehingga lintasan menjadi serong.
+Gerakan memakai integrasi gaya pada 120 Hz: thrust, drag berbasis kuadrat airspeed, crosswind/gust, gravitasi serta bantuan hover fantasi. Lepas W untuk meluncur; tahan S untuk mengerem. Menukik menambah kecepatan, menanjak menghabiskan momentum, dan perubahan heading lewat mouse/panah memerlukan radius serta banking lebih besar. A/D mengatur bank sampai ~55°; kemiringan membelokkan arah hadap dan lintasan melalui percepatan sentripetal. Belokan tetap bekerja saat meluncur tanpa W. Saat diam melayang, A/D hanya memiringkan badan. Kecepatan tinggi membutuhkan radius belok lebih besar.
 
 Tekanan dinamis memengaruhi lapisan audio angin stereo, streak udara, playback jubah, FOV dan getaran kamera ringan. HUD menunjukkan airspeed, tekanan Pa, beban G dan kesiapan Q. Reduced Motion mematikan streak/getaran dan banking visual tambahan. Angka tekanan/G adalah state simulasi game. Model ini dituning untuk terbang fantasi sinematik, bukan hasil pengukuran kendaraan nyata atau rekonstruksi fisika sebuah film.
 
@@ -97,7 +97,7 @@ Uji memeriksa coast, tekanan/efek angin, pembalikan arah gerak oleh Q, energi/co
 
 ## Kontrol condong dan descend E
 
-A/D kini mengatur sikap badan/sapu pada sumbu roll. Model sudut memakai torsi, kecepatan sudut dan redaman yang bertambah sesuai tekanan udara. Saat tombol dilepas, badan kembali tegak secara bertahap; torso bereaksi sedikit terlambat terhadap kemiringan untuk memberi kesan bobot. Arah hadap tetap di mouse/panah. W memberi dorongan, dan W+A/D mengarahkannya serong mengikuti kemiringan badan. Q tetap putar balik khusus.
+A/D kini mengatur sikap badan/sapu pada sumbu roll. Model sudut memakai torsi, kecepatan sudut dan redaman yang bertambah sesuai tekanan udara. Saat tombol dilepas, badan kembali tegak secara bertahap; torso bereaksi sedikit terlambat terhadap kemiringan untuk memberi kesan bobot. Mouse/panah menyesuaikan arah dari lintasan yang sudah dibelokkan; melepas A/D mengembalikan badan tegak sambil mempertahankan arah baru. W memberi dorongan sepanjang arah hadap. R memusatkan kontrol ke arah sekarang, dan Q tetap putar balik khusus.
 
 Default descend adalah **E**. Profil lama yang masih menyimpan Ctrl di-upgrade otomatis dan petunjuk HUD mengikuti binding aktif. Remapping khusus berikutnya tetap didukung.
 
@@ -106,7 +106,7 @@ npm run test:roll
 BASE_URL=http://localhost:4173 npm run test:roll
 ```
 
-Uji memeriksa kemiringan kiri/kanan tanpa yaw/lateral thrust, kembali tegak, reaksi rig, migrasi binding yang tersimpan, E untuk turun, serta gerak serong kiri/kanan saat W+A/D tanpa memutar arah hadap.
+Uji memeriksa kemiringan tanpa yaw saat hover, bank-to-turn kiri/kanan saat bergerak, belokan saat meluncur tanpa W, mempertahankan arah setelah roll-out, R recenter, reaksi rig, migrasi binding dan E untuk turun.
 
 ## QA pertandingan M2
 

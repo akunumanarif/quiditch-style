@@ -77,6 +77,27 @@ test(
       assert.ok(
         Math.abs(pilots.find((p) => p.id === host.sessionId)!.y - y) < 0.2,
       );
+      // A held heading reference must permit server-owned bank turns and roll-out.
+      for (let seq = 100; seq < 126; seq++) {
+        host.send("input", { ...neutralInput(), forward: 1, strafe: 1, seq });
+        await delay(34);
+      }
+      await until(
+        () =>
+          pilots.find((p) => p.id === host.sessionId)!.bankHeadingOffset > 0.15,
+      );
+      await until(
+        () =>
+          guestPilots.find((p) => p.id === host.sessionId)!.bankHeadingOffset >
+          0.15,
+      );
+      const bankedYaw = pilots.find((p) => p.id === host.sessionId)!.yaw;
+      host.send("input", { ...neutralInput(), seq: 126 });
+      await delay(900);
+      assert.ok(
+        pilots.find((p) => p.id === host.sessionId)!.yaw >= bankedYaw - 0.03,
+        "stale-input braking must preserve the banked course",
+      );
       const count = pilots.find((p) => p.id === host.sessionId)!.turnCount;
       host.send("input", {
         ...neutralInput(),
