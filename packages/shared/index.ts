@@ -14,6 +14,7 @@ export type FlightInput = {
 export type Pilot = {
   id: string;
   name: string;
+  bot?: boolean;
   team: Team;
   role: Role;
   x: number;

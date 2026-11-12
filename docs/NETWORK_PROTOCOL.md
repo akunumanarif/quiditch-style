@@ -21,3 +21,13 @@ The shared force model adds airSpeed, pressure, wind vector, loadFactor, bank an
 ## Manual roll semantics
 
 The existing bounded `strafe` input commands manual roll. Without positive forward thrust, it does not add yaw or sideways force. With W, the server redirects the normalized thrust vector toward the actual bank angle; the velocity-alignment target uses the same travel bearing. This produces forward-diagonal movement while preserving mouse/arrow-facing yaw. Authoritative `bankVelocity` and `rollLoad` retain angular inertia and pressure feedback. Q suppresses normal bank-directed thrust during its validated reversal.
+
+## M2 match protocol
+
+New UI creates Colyseus `match` rooms; legacy `flight` remains for flight regression tests. Match max 14 human connections plus virtual bots filling the 14 gameplay slots. Server fixed 30 Hz; full snapshots 10 Hz. Per-client limit 70 commands/sec.
+
+Client commands: `select {team,role}`, `ready boolean`, `configure 60|300|600` (host/lobby only), `start` (host and all humans ready), `rematch` (host/ended), `input` (same bounded flight payload), `action {id,type,aim?}`, `ping`. Action types: `interact`, `shoot`, `pass`, `block`, `strike`, `catch`. IDs must increase; role, phase, recovery, range, possession and cooldown are server checked. Finite aim vectors are normalized. Clients cannot submit goals or score.
+
+Snapshot `{tick,pilots,match}` includes phase, host, duration/remaining/countdown, roster ready/connected/bot/role/stats, scores/winner/reason, ball ownership/trajectory, two hazards, target state and latest 12 numbered events. Score updates use ball segment crossing; catch requires Seeker within 3 m during catchable state. Input silence >350 ms returns to neutral braking. Bot decisions run 10 Hz through the same input/action validators; flight stays 30 Hz.
+
+No new human joins after countdown; existing seats reconnect for 30 s without replaying lobby. Drop disengages flight; connected host transfers. Voluntary departure or timeout is replaced by an AI pilot at the same position/role. Lobby/rematch regenerates role-balanced bots. Live settings do not pause the server. All state remains in memory and empty rooms dispose through Colyseus.

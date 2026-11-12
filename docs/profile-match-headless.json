@@ -1,0 +1,370 @@
+{
+  "recordedAt": "2026-11-12T08:29:27.778Z",
+  "browser": "158.0.8127.18",
+  "environment": "Headless Chromium localhost 1440x1000 Low; not target-device certification",
+  "players": 2,
+  "bots": 12,
+  "live": {
+    "fps": 15.386193456115352,
+    "p95": 144.80000019073486,
+    "visuals": {
+      "skyLoaded": true,
+      "airflow": {
+        "visible": true,
+        "alpha": 0.06501588686786655,
+        "count": 40,
+        "intensity": 0.07154204905618959
+      },
+      "riggedPilots": 14,
+      "torsoSecondaryMotion": 14,
+      "animationClips": [
+        "Flight",
+        "Boost",
+        "Brake",
+        "Ascend",
+        "Descend",
+        "BankLeft",
+        "BankRight",
+        "Recover"
+      ],
+      "materials": 73,
+      "quality": "Low",
+      "drawCalls": 61,
+      "vertices": 158962,
+      "activeMeshes": 65
+    }
+  },
+  "result": {
+    "phase": "ENDED",
+    "hostId": "sm1yLPELN",
+    "duration": 60,
+    "remaining": 35.93333333333298,
+    "countdown": 0,
+    "scores": {
+      "auric": 40,
+      "verdant": 0
+    },
+    "winner": "auric",
+    "reason": "Aurel Wing tertangkap",
+    "roster": [
+      {
+        "id": "sm1yLPELN",
+        "name": "Test Pilot",
+        "team": "auric",
+        "role": "Striker",
+        "bot": false,
+        "connected": true,
+        "ready": true,
+        "state": "Formation",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "yUA8nIyXd",
+        "name": "Test Pilot",
+        "team": "verdant",
+        "role": "Seeker",
+        "bot": false,
+        "connected": true,
+        "ready": true,
+        "state": "Formation",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-0",
+        "name": "Ash A",
+        "team": "auric",
+        "role": "Striker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "ChaseBall",
+        "goals": 1,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-1",
+        "name": "Briar A",
+        "team": "auric",
+        "role": "Striker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "ChaseBall",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-3",
+        "name": "Dune A",
+        "team": "auric",
+        "role": "Warden",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Recover",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-4",
+        "name": "Elm A",
+        "team": "auric",
+        "role": "Warden",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Protect",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-5",
+        "name": "Flint A",
+        "team": "auric",
+        "role": "Keeper",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Defend",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-auric-6",
+        "name": "Gale A",
+        "team": "auric",
+        "role": "Seeker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "PursueTarget",
+        "goals": 0,
+        "passes": 0,
+        "catches": 1
+      },
+      {
+        "id": "bot-verdant-0",
+        "name": "Ash V",
+        "team": "verdant",
+        "role": "Striker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Formation",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-verdant-1",
+        "name": "Briar V",
+        "team": "verdant",
+        "role": "Striker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Carry",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-verdant-2",
+        "name": "Cove V",
+        "team": "verdant",
+        "role": "Striker",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Formation",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-verdant-3",
+        "name": "Dune V",
+        "team": "verdant",
+        "role": "Warden",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Protect",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-verdant-4",
+        "name": "Elm V",
+        "team": "verdant",
+        "role": "Warden",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Protect",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      },
+      {
+        "id": "bot-verdant-5",
+        "name": "Flint V",
+        "team": "verdant",
+        "role": "Keeper",
+        "bot": true,
+        "connected": true,
+        "ready": true,
+        "state": "Defend",
+        "goals": 0,
+        "passes": 0,
+        "catches": 0
+      }
+    ],
+    "ball": {
+      "x": -1.3421668767059918,
+      "y": 17.72395904951147,
+      "z": -40.06694400159225,
+      "vx": 2.600182943320333,
+      "vy": -0.40932066542848805,
+      "vz": 38.16251834540689,
+      "owner": "bot-verdant-1",
+      "mode": "carried",
+      "age": 6.399999999999987,
+      "lastTouch": "bot-verdant-1",
+      "lastTeam": "verdant"
+    },
+    "hazards": [
+      {
+        "id": "hazard-0",
+        "x": 25.343631610588293,
+        "y": 28.649324746887256,
+        "z": 12.633506048256892,
+        "vx": -7.671021287249511,
+        "vy": -2.515320837374947,
+        "vz": 3.382673147237824,
+        "team": null,
+        "grace": 0.6999999999999995,
+        "lastHit": "yUA8nIyXd"
+      },
+      {
+        "id": "hazard-1",
+        "x": 27.47096532401786,
+        "y": 29.093129131928926,
+        "z": 12.849822659234015,
+        "vx": -7.044923535624081,
+        "vy": -0.6254588630202969,
+        "vz": 5.365508388256257,
+        "team": null,
+        "grace": 0.9666666666666661,
+        "lastHit": "yUA8nIyXd"
+      }
+    ],
+    "target": {
+      "x": 2.8780843238841967,
+      "y": 29.933233717894257,
+      "z": 35.69692836711244,
+      "vx": -3.649829312755939,
+      "vy": -0.15332778071186937,
+      "vz": 2.0203168010215933,
+      "state": "captured",
+      "captor": "bot-auric-6"
+    },
+    "events": [
+      {
+        "id": 7,
+        "type": "steal",
+        "text": "Briar A merebut bola",
+        "team": "auric",
+        "time": 11.866666666666635
+      },
+      {
+        "id": 8,
+        "type": "steal",
+        "text": "Cove V merebut bola",
+        "team": "verdant",
+        "time": 11.966666666666635
+      },
+      {
+        "id": 9,
+        "type": "steal",
+        "text": "Ash A merebut bola",
+        "team": "auric",
+        "time": 12.366666666666633
+      },
+      {
+        "id": 10,
+        "type": "steal",
+        "text": "Ash V merebut bola",
+        "team": "verdant",
+        "time": 13.56666666666663
+      },
+      {
+        "id": 11,
+        "type": "steal",
+        "text": "Ash A merebut bola",
+        "team": "auric",
+        "time": 13.666666666666629
+      },
+      {
+        "id": 12,
+        "type": "steal",
+        "text": "Briar V merebut bola",
+        "team": "verdant",
+        "time": 14.466666666666626
+      },
+      {
+        "id": 13,
+        "type": "steal",
+        "text": "Ash A merebut bola",
+        "team": "auric",
+        "time": 14.566666666666626
+      },
+      {
+        "id": 14,
+        "type": "block",
+        "text": "Flint V menahan bola",
+        "team": "verdant",
+        "time": 17.10000000000001
+      },
+      {
+        "id": 15,
+        "type": "steal",
+        "text": "Ash A merebut bola",
+        "team": "auric",
+        "time": 17.666666666666703
+      },
+      {
+        "id": 16,
+        "type": "steal",
+        "text": "Briar V merebut bola",
+        "team": "verdant",
+        "time": 17.666666666666703
+      },
+      {
+        "id": 17,
+        "type": "catch",
+        "text": "Gale A menangkap Aurel Wing · +30",
+        "team": "auric",
+        "time": 24.06666666666702
+      },
+      {
+        "id": 18,
+        "type": "end",
+        "text": "Aurel Wing tertangkap",
+        "time": 24.06666666666702
+      }
+    ]
+  },
+  "rematch": true,
+  "errors": []
+}

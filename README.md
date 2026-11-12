@@ -1,6 +1,6 @@
-# Broom League · Windmere · M1
+# Broom League · Windmere · M2
 
-Browser game 3D Babylon.js dengan **latihan terbang 60 detik**, karakter/sapu GLB berig, material PBR scan, sky HDR, dan private flight multiplayer Colyseus. Tidak membutuhkan akun atau database.
+Browser game 3D Babylon.js dengan **pertandingan 7v7 + bot**, bola/gol, empat role, timer, hasil/rematch, **latihan terbang 60 detik**, karakter/sapu GLB berig, material PBR scan, sky HDR, dan private flight multiplayer Colyseus. Tidak membutuhkan akun atau database.
 
 ## Jalankan
 
@@ -19,8 +19,10 @@ Buka **http://localhost:5173**. Vite 5173 dan Colyseus 2567 dijalankan bersamaan
 2. **W** memberi dorongan, **S** rem udara, **A/D** condong kiri/kanan; **W+A/D** terbang serong, **Space** menanjak, **E** menukik/turun, **Shift kiri + W** boost, mouse/arrow keys untuk arah, **R** recenter. **Q** putar balik 180° (~0,8 detik, 24 energi, cooldown 3 detik); **Q sambil A** memilih arah putaran kiri. Klik canvas untuk mouse look.
 3. Lewati waypoint emas sebanyak mungkin dalam **60 detik**. Hasil menampilkan waypoint/lap dan menyediakan **Fly again**. Ini hasil latihan lokal, bukan skor pertandingan authoritative.
 4. **Esc → Settings** untuk grafik, sensitivitas, reduced motion, suara dan keyboard remapping. Klik nama tombol untuk mengubahnya, lalu Save. Pengaturan versi lama tetap dibaca dengan default aman.
-5. **Create room → Copy invite link** → buka di browser/incognito kedua. Setiap pilot menggunakan simulasi authoritative 30 Hz dan snapshot 15 Hz. Tim dan role dapat dipilih, kapasitas 7 kursi/tim tetap divalidasi server. Room ini untuk latihan bersama; belum ada kickoff atau bot match.
-6. **F3** menampilkan FPS, p95, draw calls, renderer dan RTT.
+5. **Play 7v7 match** atau **Create room** → pilih tim/role/durasi → **Ready → Mulai pertandingan**. Host seorang diri cukup; bot mengisi slot kosong. Untuk teman: **Copy invite** → buka di browser/incognito kedua sebelum kick-off. Semua manusia harus Ready. Server match 30 Hz, snapshot 10 Hz.
+6. **F** mengambil/merebut/mengoper bola bagi Striker/Keeper, menangkis bagi Warden, menangkap target bagi Seeker. Klik arena untuk mouse look; klik kiri berikutnya menembak bola / memukul hazard / menangkap target sesuai role. **E tetap turun**.
+7. Gol **+10**, tangkapan Aurel Wing **+30 dan mengakhiri match**. Skor tertinggi menang, seri diperbolehkan. Durasi 1/5/10 menit; default 10 menit. Hasil menampilkan gol/oper/tangkapan setiap pilot; host bisa Rematch.
+8. **F3** menampilkan FPS, p95, draw calls, renderer dan RTT.
 
 Kamera menghindari lantai, perimeter dan tiang ring. Flight memiliki inersia, banking, energi boost, batas kecepatan gabungan, dan collision recovery. Input roll/vertikal serta heading memakai easing; posisi tubuh memakai spring, delapan klip animasi dibaurkan secara kontinu, dan chase camera mengikuti pose yang dirender dengan transisi posisi serta arah pandang. Transisi boost juga bertahap. Audio angin dan nada waypoint disintesis lokal, dapat dinonaktifkan.
 
@@ -32,7 +34,7 @@ Kamera menghindari lantai, perimeter dan tiang ring. Flight memiliki inersia, ba
 - Pilot/sapu orisinal dari Blender: **21.024 triangle, 9 mesh parts, 12 joints, 8 klip**, GLB ~1,35 MB. Helm/goggles, sepatu, sarung tangan, jubah beranimasi, shaft melengkung dan 100 willow twigs.
 - Low mempertahankan diffuse scan dengan shading statis lebih ringan, menurunkan resolusi, serta menonaktifkan shadow dan normal detail; High mengaktifkan pencahayaan/shadow lebih lengkap. Stand/tower digabung per material untuk membatasi draw calls.
 
-Ini art pass M1 dengan kemajuan dari proksi M0; karakter masih memerlukan sculpt, detail kain/wajah, LOD dan animasi yang lebih matang untuk kualitas final PRD.
+Ini art pass M1 dengan kemajuan dari proksi M0; karakter masih memerlukan sculpt, detail kain/wajah, LOD lanjutan dan animasi yang lebih matang untuk kualitas final PRD.
 
 [Preview stadion](docs/screenshots/m1-stadium.png) · [Flight High](docs/screenshots/m1-flight-high.png) · [Pilot](docs/screenshots/m1-rider.png)
 
@@ -45,7 +47,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-`check`: strict TypeScript, ESLint, 34 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
+`check`: strict TypeScript, ESLint, 42 unit/integration tests dan production build. Browser QA menyelesaikan satu latihan **60 detik nyata**, retry, remapping/audio persistence, Havok, GLB/sky, invite dan gerakan dua browser terpisah. Screenshot dan hasil pengukuran ditulis ke `docs/`.
 
 ```sh
 npm run build
@@ -62,7 +64,7 @@ Output: `apps/web/dist`. Set `VITE_SERVER_URL=wss://server.example` saat build u
 
 ## Batasan dan tahap berikutnya
 
-**M2 belum diimplementasikan**: bola pertandingan, hazard, target bersayap, aksi role, bot 7v7, scoring/state machine, dan kemenangan match. M3 melengkapi lobby/host handover, prediction/reconciliation, refresh recovery dan deployment. M4 sinematik serta final art/audio; M5 QA 14 client dan perangkat target.
+**M2 diimplementasikan**: bot pengisi 7v7, bola authoritative dengan swept goal detection, dua hazard, Aurel Wing, aksi empat role, countdown/timer, skor, hasil dan rematch. Lobby, Ready, host handover dan penggantian pemain yang keluar juga tersedia. M3 berikutnya melengkapi prediction/reconciliation, refresh recovery dan deployment. M4 sinematik serta final art/audio; M5 QA 14 client dan perangkat target.
 
 Automatic reconnect transport memiliki grace 30 detik. Token disimpan dalam sessionStorage; recovery setelah refresh belum memiliki UI. Semua room hilang saat server restart. Tidak ada akun/leaderboard/database.
 
@@ -105,3 +107,12 @@ BASE_URL=http://localhost:4173 npm run test:roll
 ```
 
 Uji memeriksa kemiringan kiri/kanan tanpa yaw/lateral thrust, kembali tegak, reaksi rig, migrasi binding yang tersimpan, E untuk turun, serta gerak serong kiri/kanan saat W+A/D tanpa memutar arah hadap.
+
+## QA pertandingan M2
+
+```sh
+# Server dan preview produksi aktif di 2567 / 4173:
+npm run test:match
+```
+
+Uji dua browser + 12 bot dari lobby hingga hasil dan rematch. `tests/match.test.ts` juga menjalankan pertandingan 14 bot dengan kontrol tervalidasi hingga gol kedua tim, penyelamatan keeper dan tangkapan final. Model bot memakai LOD berig 4.957 segitiga dengan satu klip Flight; model pemain utama mempertahankan delapan klip. Bangun ulang dengan Blender background memakai `assets-source/build_lod.py`.

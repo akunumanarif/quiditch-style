@@ -1,6 +1,6 @@
 {
   "name": "broom-league",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -20,7 +20,8 @@
     "assets:fetch": "python3 assets-source/fetch_materials.py",
     "test:flight": "node tests/flight-browser.mjs",
     "test:aero": "node tests/aerodynamics-browser.mjs",
-    "test:roll": "node tests/roll-browser.mjs"
+    "test:roll": "node tests/roll-browser.mjs",
+    "test:match": "node tests/match-browser.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",

@@ -88,7 +88,7 @@ try {
   await p.getByRole("button", { name: "Return to main menu" }).click();
   await enter(p, "＋ Create room");
   await p.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  await p.getByRole("button", { name: /Copy invite/ }).click();
+  await p.locator("#match-invite").click();
   const invite = await p.evaluate(() => navigator.clipboard.readText());
   assert.ok(invite.includes("#invite="));
   const second = await page();
@@ -98,10 +98,23 @@ try {
     .waitFor({ timeout: 30000 });
   await second.getByRole("button", { name: /Continue/ }).click();
   await second.waitForFunction(
-    () => window.broomDebug?.metrics.pilots.length === 2,
+    () => window.broomDebug?.metrics.pilots.length === 14,
     { timeout: 45000 },
   );
-  await p.waitForFunction(() => window.broomDebug?.metrics.pilots.length === 2);
+  await p.waitForFunction(
+    () => window.broomDebug?.metrics.pilots.length === 14,
+  );
+  await p.locator("#match-ready").click();
+  await second.locator("#match-ready").click();
+  await p.waitForFunction(() =>
+    window.broomDebug.metrics.match.roster
+      .filter((m) => !m.bot)
+      .every((m) => m.ready),
+  );
+  await p.locator("#match-start").click();
+  await p.waitForFunction(
+    () => window.broomDebug.metrics.match.phase === "LIVE",
+  );
   const before = await p.evaluate(() => window.broomDebug.metrics.pilots[0].z);
   await p.keyboard.down("KeyI");
   await p.waitForTimeout(2000);
@@ -116,7 +129,7 @@ try {
     "docs/profile-headless.json",
     JSON.stringify(
       {
-        milestone: "M1",
+        milestone: "M2",
         recordedAt: new Date().toISOString(),
         browser: await browser.version(),
         environment:

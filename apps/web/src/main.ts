@@ -1,3 +1,6 @@
+import { createMatchUI } from "./gameplay/match-ui";
+import { createMatchObjects } from "./gameplay/match-objects";
+import type { MatchSnapshot } from "../../../packages/shared/match.ts";
 import "./style.css";
 import {
   FLIGHT_PHYSICS,
@@ -40,6 +43,19 @@ let pendingRebind: ((event: KeyboardEvent) => void) | undefined;
 let world: ReturnType<typeof buildArena> | undefined;
 let runtime: Awaited<ReturnType<typeof makeEngine>> | undefined;
 let room: Room | undefined;
+let matchState: MatchSnapshot | undefined;
+let matchObjects: ReturnType<typeof createMatchObjects> | undefined;
+const matchUI = createMatchUI(
+  (type, value) => room?.send(type, value),
+  () => void leave(),
+  () => ({
+    id: me.id,
+    pilot: me,
+    yaw,
+    pitch,
+    interactKey: keyLabel(settings.bindings.interact),
+  }),
+);
 let me = makePilot("local");
 let pilots: Pilot[] = [];
 let invite = "";
@@ -53,6 +69,7 @@ const cameraLook = new Vector3(0, 14, 0);
 let snapshotReceivedAt = 0;
 let queuedQuickTurn = false;
 let observedTurnCount = 0;
+let lastMatchEvent = 0;
 const cameraBoom = new Vector3();
 let frame = 0;
 let netClock = 0;
@@ -140,12 +157,13 @@ function toast(message: string) {
 const emblem =
   '<svg viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="M30 3 53 14v20L30 56 7 34V14Z" stroke="currentColor" stroke-width="1.7"/><path d="m15 20 15 9 15-9-15 23-15-23Zm15 9V12" stroke="currentColor" stroke-width="2"/><path d="M12 17h36" stroke="currentColor"/></svg>';
 function shell() {
-  app.innerHTML = `<div class="vignette"></div><header><a class="brand" href="/">${emblem}<span>BROOM<span class="brand-small">LEAGUE</span></span></a><nav><span class="nav-active">PLAY</span><button id="how">FLIGHT GUIDE</button><button id="settings">SETTINGS</button></nav><span class="build">M1 <i></i> FLIGHT EDITION</span></header><main class="landing"><div class="eyebrow"><span></span> THE SKY IS YOUR PLAYING FIELD</div><h1>Born to fly.<br>Built to <em>compete.</em></h1><p class="intro">A broom. An open sky. A league of your own.<br>Take flight above the stone walls of Windmere.</p><div class="menu-card"><div class="card-caption">YOUR NEXT FLIGHT <span>01 / WINDMERE</span></div><label class="name-label">PILOT NAME<input id="name" maxlength="20" autocomplete="nickname" aria-label="Nama pilot"></label><button class="primary" id="practice"><span class="button-symbol">↗</span><span>Quick practice<small>Find your wings · solo flight course</small></span><b>→</b></button><div class="secondary-row"><button id="create">＋ Create room</button><button id="join">↗ Join room</button></div><div class="card-bottom"><i></i> No account needed <span>KEYBOARD + MOUSE</span></div></div><div class="preview-note">ONE-MINUTE FLIGHT TRIAL <span>Detailed rider · scanned materials · shared skies</span></div></main><aside class="location"><span class="location-line"></span><div>THE WINDMERE GROUNDS<small>Highlands arena · Golden hour</small></div><span class="weather">☀ <b>18°</b><small>WIND 8 KM/H</small></span></aside><footer><span><i></i> ${runtime?.renderer || "BABYLON.JS"} <span class="muted"> / </span> DESKTOP EDITION</span><span>ORIGINAL WORLD. LIMITLESS SKIES.</span><span>v0.2.0 <span class="muted">·</span> M1 DEVELOPMENT BUILD</span></footer>`;
+  app.innerHTML = `<div class="vignette"></div><header><a class="brand" href="/">${emblem}<span>BROOM<span class="brand-small">LEAGUE</span></span></a><nav><span class="nav-active">PLAY</span><button id="how">FLIGHT GUIDE</button><button id="settings">SETTINGS</button></nav><span class="build">M2 <i></i> MATCH EDITION</span></header><main class="landing"><div class="eyebrow"><span></span> THE SKY IS YOUR PLAYING FIELD</div><h1>Born to fly.<br>Built to <em>compete.</em></h1><p class="intro">A broom. An open sky. A league of your own.<br>Take flight above the stone walls of Windmere.</p><div class="menu-card"><div class="card-caption">YOUR NEXT FLIGHT <span>01 / WINDMERE</span></div><label class="name-label">PILOT NAME<input id="name" maxlength="20" autocomplete="nickname" aria-label="Nama pilot"></label><button class="primary" id="bot-match"><span class="button-symbol">✦</span><span>Play 7v7 match<small>Two teams · AI teammates & opponents</small></span><b>→</b></button><button class="primary practice-button" id="practice"><span class="button-symbol">↗</span><span>Quick practice<small>Find your wings · solo flight course</small></span><b>→</b></button><div class="secondary-row"><button id="create">＋ Create room</button><button id="join">↗ Join room</button></div><div class="card-bottom"><i></i> No account needed <span>KEYBOARD + MOUSE</span></div></div><div class="preview-note">ONE-MINUTE FLIGHT TRIAL <span>Detailed rider · scanned materials · shared skies</span></div></main><aside class="location"><span class="location-line"></span><div>THE WINDMERE GROUNDS<small>Highlands arena · Golden hour</small></div><span class="weather">☀ <b>18°</b><small>WIND 8 KM/H</small></span></aside><footer><span><i></i> ${runtime?.renderer || "BABYLON.JS"} <span class="muted"> / </span> DESKTOP EDITION</span><span>ORIGINAL WORLD. LIMITLESS SKIES.</span><span>v0.3.0 <span class="muted">·</span> M2 DEVELOPMENT BUILD</span></footer>`;
   ($("#name") as HTMLInputElement).value = settings.name;
   $("#name").onchange = () => {
     settings.name = ($("#name") as HTMLInputElement).value;
     saveSettings(settings);
   };
+  $("#bot-match").onclick = () => void begin("create");
   $("#practice").onclick = () => void begin("practice");
   $("#create").onclick = () => void begin("create");
   $("#join").onclick = () => joinDialog();
@@ -374,6 +392,7 @@ async function ensureWorld() {
   preview?.dispose();
   preview = undefined;
   world = buildArena(runtime.engine, canvas);
+  matchObjects = createMatchObjects(world.scene);
   world.setReducedMotion(settings.reducedMotion);
   applyQuality(
     settings.quality === "Auto" ? effectiveQuality : settings.quality,
@@ -397,7 +416,7 @@ async function connect(kind: "create" | "join", id?: string, token?: string) {
   const client = new Client(origin);
   room =
     kind === "create"
-      ? await client.create("flight", { name: settings.name })
+      ? await client.create("match", { name: settings.name })
       : await client.joinById(id!, { invite: token, name: settings.name });
   room.reconnection.minUptime = 0;
   me = makePilot(room.sessionId, settings.name);
@@ -405,14 +424,34 @@ async function connect(kind: "create" | "join", id?: string, token?: string) {
   room.onMessage("welcome", (d: { invite: string }) => {
     invite = d.invite;
   });
-  room.onMessage("snapshot", (d: { pilots: Pilot[] }) => {
-    snapshotReceivedAt = performance.now();
-    pilots = d.pilots;
-    const mine = pilots.find((p) => p.id === room?.sessionId);
-    if (mine) {
-      me = { ...mine };
-    }
-  });
+  room.onMessage(
+    "snapshot",
+    (d: { pilots: Pilot[]; match?: MatchSnapshot }) => {
+      matchState = d.match;
+      for (const e of matchState?.events || []) {
+        if (
+          e.id > lastMatchEvent &&
+          ["goal", "catch", "start"].includes(e.type)
+        )
+          audio.cue();
+        lastMatchEvent = Math.max(lastMatchEvent, e.id);
+      }
+      if (matchState) matchUI.update(matchState);
+      snapshotReceivedAt = performance.now();
+      pilots = d.pilots;
+      const mine = pilots.find((p) => p.id === room?.sessionId);
+      if (mine) {
+        me = { ...mine };
+        if (
+          matchState?.phase === "LOBBY" ||
+          matchState?.phase === "COUNTDOWN"
+        ) {
+          yaw = me.yaw;
+          pitch = 0;
+        }
+      }
+    },
+  );
   room.onMessage("notice", (s: string) => toast(s));
   room.onMessage("pong", () => {
     rtt = Math.round(performance.now() - pingStart);
@@ -474,6 +513,7 @@ async function begin(
     paused = false;
     closeModal();
     hud();
+    if (matchState) matchUI.update(matchState);
     toast("Klik arena untuk mouse look. W untuk terbang.");
   } catch (e) {
     closeModal();
@@ -481,7 +521,7 @@ async function begin(
   }
 }
 function hud() {
-  app.innerHTML = `<div class="flight-top"><div class="hud-brand">${emblem}<div>WINDMERE<small>${room ? "PRIVATE FLIGHT / M1" : "PRACTICE / 60 SECOND TRIAL"}</small></div></div><div class="course-heading"><span id="trial-clock">FLIGHT TRAINING / 01:00</span><b id="objective">WAYPOINT 01 / 06</b></div><button class="outline" id="pause">ESC · SETTINGS</button></div><div class="wind-pressure" id="wind-pressure"></div><div class="air-feedback"><span id="air-readout">AIR 0 KM/H · 0 Pa · 1.0G</span><b id="turn-readout">Q · QUICK TURN READY</b></div><div class="reticle">＋</div><div id="waypoint" class="waypoint"><span>◇</span><small id="distance">100 m</small></div><div class="objective-panel"><span class="eyebrow">${room ? "SHARED SKIES" : "YOUR OBJECTIVE"}</span><h3>${room ? "Fly together." : "Follow the gold."}</h3><p>${room ? "Gerakan pilot disimulasikan server." : "Lewati waypoint emas. Selesaikan rute sebanyak mungkin dalam 60 detik."}</p><small id="course-stats">0 / 6 WAYPOINTS</small>${room ? '<button class="outline" id="copy">Copy invite link ↗</button><select id="team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select><select id="role"><option>Striker</option><option>Warden</option><option>Keeper</option><option>Seeker</option></select><small id="members"></small>' : ""}</div><div class="flight-bottom"><div class="speed"><b id="speed">00</b><span>KM/H<small id="altitude">ALT 13 M</small></span></div><div class="energy-wrap"><div><span>BOOST ENERGY</span><b id="energy-text">100%</b></div><div class="energy"><span id="energy-fill"></span></div><small>HOLD <kbd>SHIFT</kbd> TO BOOST · <kbd>S</kbd> AIRBRAKE</small></div><div class="flight-hints"><span><kbd>${keyLabel(settings.bindings.forward)}</kbd> THRUST · <kbd>${keyLabel(settings.bindings.left)} ${keyLabel(settings.bindings.right)}</kbd> LEAN</span><span><kbd>${keyLabel(settings.bindings.ascend)}</kbd> ASCEND</span><span><kbd>${keyLabel(settings.bindings.descend)}</kbd> DESCEND</span></div></div><div id="debug" hidden></div>`;
+  app.innerHTML = `<div class="flight-top"><div class="hud-brand">${emblem}<div>WINDMERE<small>${room ? "FRIENDLY MATCH / M2" : "PRACTICE / 60 SECOND TRIAL"}</small></div></div><div class="course-heading"><span id="trial-clock">FLIGHT TRAINING / 01:00</span><b id="objective">WAYPOINT 01 / 06</b></div><button class="outline" id="pause">ESC · SETTINGS</button></div><div class="wind-pressure" id="wind-pressure"></div><div class="air-feedback"><span id="air-readout">AIR 0 KM/H · 0 Pa · 1.0G</span><b id="turn-readout">Q · QUICK TURN READY</b></div><div class="reticle">＋</div><div id="waypoint" class="waypoint"><span>◇</span><small id="distance">100 m</small></div><div class="objective-panel"><span class="eyebrow">${room ? "SHARED SKIES" : "YOUR OBJECTIVE"}</span><h3>${room ? "Fly together." : "Follow the gold."}</h3><p>${room ? "Gerakan pilot disimulasikan server." : "Lewati waypoint emas. Selesaikan rute sebanyak mungkin dalam 60 detik."}</p><small id="course-stats">0 / 6 WAYPOINTS</small>${room ? '<button class="outline" id="copy">Copy invite link ↗</button><select id="team"><option value="auric">Auric</option><option value="verdant">Verdant</option></select><select id="role"><option>Striker</option><option>Warden</option><option>Keeper</option><option>Seeker</option></select><small id="members"></small>' : ""}</div><div class="flight-bottom"><div class="speed"><b id="speed">00</b><span>KM/H<small id="altitude">ALT 13 M</small></span></div><div class="energy-wrap"><div><span>BOOST ENERGY</span><b id="energy-text">100%</b></div><div class="energy"><span id="energy-fill"></span></div><small>HOLD <kbd>SHIFT</kbd> TO BOOST · <kbd>S</kbd> AIRBRAKE</small></div><div class="flight-hints"><span><kbd>${keyLabel(settings.bindings.forward)}</kbd> THRUST · <kbd>${keyLabel(settings.bindings.left)} ${keyLabel(settings.bindings.right)}</kbd> LEAN</span><span><kbd>${keyLabel(settings.bindings.ascend)}</kbd> ASCEND</span><span><kbd>${keyLabel(settings.bindings.descend)}</kbd> DESCEND</span></div></div><div id="debug" hidden></div>`;
   $("#pause").onclick = settingsDialog;
   if (room) {
     $("#copy").onclick = async () => {
@@ -518,6 +558,10 @@ async function leave() {
     await room.leave();
     room = undefined;
   }
+  matchUI.clear();
+  matchState = undefined;
+  lastMatchEvent = 0;
+  matchObjects?.update(undefined, [], me.id, 0);
   pilots = [];
   world?.updatePilots([], 0);
   try {
@@ -546,7 +590,10 @@ function update() {
       world.camera.setTarget(new Vector3(0, 6, 12));
     }
   } else {
-    const active = !paused && !courseFinished;
+    const active =
+      !paused &&
+      !courseFinished &&
+      (!matchState || matchState.phase === "LIVE");
     const i = neutralInput();
     i.seq = ++seq;
     if (active) {
@@ -609,6 +656,7 @@ function update() {
       rawDt,
       room ? (performance.now() - snapshotReceivedAt) / 1000 : 0,
     );
+    matchObjects?.update(matchState, pilots, me.id, rawDt);
     const pose = world.getPilotPose(me.id);
     const anchor = {
       x: pose?.x ?? me.x,
@@ -774,6 +822,22 @@ function update() {
         $("#members").textContent = `${pilots.length} / 14 PILOTS · ${rtt} MS`;
       }
     }
+    if (matchState) {
+      $("#waypoint").hidden = true;
+      $(".objective-panel").classList.add("match-objective");
+      $("#team").hidden = true;
+      $("#role").hidden = true;
+      $("#objective").textContent =
+        matchState.phase === "LOBBY"
+          ? "TEAM LOBBY"
+          : `ATTACK ${me.team === "auric" ? "NORTH ↑" : "SOUTH ↓"}`;
+      $("#trial-clock").textContent = "WINDMERE / 7 V 7";
+      $("#course-stats").textContent =
+        `${pilots.filter((p) => p.bot).length} BOTS · ${pilots.filter((p) => !p.bot).length} PLAYERS`;
+      $(".objective-panel h3").textContent = "Win the skies.";
+      $(".objective-panel p").textContent =
+        "Gol +10 · Aurel Wing +30 & full time";
+    }
     const debug = $("#debug");
     debug.hidden = !showDebug;
     if (showDebug && frame % 15 === 0) {
@@ -802,6 +866,8 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
   keys.add(e.code);
   if (e.code === "F3") showDebug = !showDebug;
+  if (e.code === settings.bindings.interact && !e.repeat && !paused)
+    matchUI.action();
   if (
     e.code === settings.bindings.quickTurn &&
     !e.repeat &&
@@ -824,7 +890,11 @@ window.addEventListener("keyup", (e) => keys.delete(e.code));
 window.addEventListener("blur", () => keys.clear());
 canvas.onclick = () => {
   audio.unlock();
-  if (mode === "flight" && !paused) void canvas.requestPointerLock();
+  if (mode === "flight" && !paused) {
+    if (document.pointerLockElement === canvas) matchUI.action(true);
+    else if (!matchState || matchState.phase === "LIVE")
+      void canvas.requestPointerLock();
+  }
 };
 document.addEventListener("mousemove", (e) => {
   if (document.pointerLockElement === canvas && !paused) {
@@ -886,6 +956,7 @@ Object.assign(window, {
           : undefined,
         sphereY: world?.sphereY,
         pilots,
+        match: matchState,
         ready,
         courseFinished,
         elapsed,

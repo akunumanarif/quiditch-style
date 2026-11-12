@@ -21,3 +21,11 @@ Manual gates: real GPU WebGPU, Safari/Firefox/Edge; pointer lock/trackpad/remapp
 Unit tests compare hover trajectories with A/D versus neutral roll, verify no added movement without thrust, and require W+A/D to produce left/right forward-diagonal velocity at both north/east facing headings. They also verify gradual acceleration, retained momentum, speed bounds, visible roll, angular resistance and upright settling. Settings tests cover fresh E defaults, saved left/right Ctrl migration, collision with another E binding, persistence and corrupted preference isolation. test:roll exercises real keyboard A/D without thrust, W+A/W+D diagonal travel with unchanged facing, secondary torso rig, old Ctrl inactivity, E descent, and persisted migration in production preview.
 
 Intentional manual roll remains visible with Reduced Motion; only automatic sway, secondary torso motion and extra camera/wind effects are suppressed. This case is covered in unit and production-browser roll checks.
+
+## M2 match checks
+
+`npm run check`: 42 unit/integration tests including exact team role filling, bot-to-human slot replacement, host and readiness gates, live role/join locking, directional swept goals, reset/one-shot score, malformed and replayed actions, cooldown/range/role validation, timer winner/draw, catch ending, rematch, live bot replacement and complete 14-bot playthrough. The network test uses an isolated server on 2579 and two real Colyseus clients.
+
+`npm run test:match`: two isolated Chromium contexts join through invite, select a role, ready/start a 60-second configured match, render 14 animated riders, observe shared scores and target catch/results, then host rematches. The match can end before timer expiry through a valid catch. Real elapsed timer expiry is covered in fixed-step simulation, not claimed from this early-ending browser fixture. Screenshots: `m2-lobby.png`, `m2-match.png`, `m2-results.png`; JSON: `profile-match-headless.json`.
+
+Manual follow-up: play each role, mouse shooting accuracy, readable target labels, pressure feedback under load, slow/missing-packet behavior and target-device frame budget. No 14-human/public-server acceptance has been performed.

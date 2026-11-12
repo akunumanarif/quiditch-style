@@ -81,3 +81,9 @@ The current control contract supersedes the earlier identical-trajectory claim w
 **34 unit/integration tests**, strict types, lint and production build passed. Production-browser roll QA additionally passed left and right diagonal propulsion. In the north-facing test, W+A produced velocity x/z **-9.30/10.50 m/s**, while W+D produced **21.95/17.88 m/s**; both retained the original facing yaw. The earlier hover-only A/D checks still passed, as did E migration, torso motion and Reduced Motion.
 
 Evidence: [qa-manual-roll.json](qa-manual-roll.json). The headless Low 1280×800 FPS sample was 40.8, for this scenario only.
+
+## M2 · 14 riders / complete matches
+
+Added an original skinned bot LOD (4,957 exported triangles, 781,284 bytes), shared simple team materials, one evaluated Flight loop per bot and no bot shadow passes. The human rider retains the original detailed model and blended clips. Balls are low-segment primitives; UI world labels are distance-culled; authoritative bot decisions run 10 Hz and flight 30 Hz.
+
+`profile-match-headless.json` records two simultaneous 1440×1000 Chromium contexts, 2 humans + 12 bots, an actual configured 60-second match ending early by a legal catch, shared result and rematch. It is a functional and local rendering measurement, not a 14-human load test or target-device FPS certification. An initial Medium run before shared bot materials measured 5.4 FPS / p95 314.4 ms with 195 draws, demonstrating why Low and target-device profiling are still necessary. Final shared-material Low run: 15.4 FPS / p95 144.8 ms across two simultaneous contexts, 61 draws and 73 loaded materials at capture. This improves the initial run but remains below the performance target. Performance gate remains open; no 60 FPS claim.

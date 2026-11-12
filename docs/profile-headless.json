@@ -1,28 +1,28 @@
 {
-  "milestone": "M1",
-  "recordedAt": "2026-11-12T06:27:00.541Z",
+  "milestone": "M2",
+  "recordedAt": "2026-11-12T08:31:34.387Z",
   "browser": "158.0.8127.18",
   "environment": "Headless Chromium, localhost, 1440x1000; GPU/headless results are not target-device release benchmarks",
   "practice": {
     "renderer": "WebGL2",
-    "fps": 35.4316759162755,
-    "p95": 32.700000047683716,
-    "profileTransitions": [
-      {
-        "quality": "Medium",
-        "frames": 73,
-        "p95": 204.29999995231628,
-        "elapsed": 8.039599999904633
-      }
-    ],
-    "sampleFrames": 391,
-    "meshes": 25,
+    "fps": 35.31073445733126,
+    "p95": 40.39999985694885,
+    "profileTransitions": [],
+    "sampleFrames": 600,
+    "meshes": 32,
     "physics": "Havok V2",
-    "glbLoadMs": 2340.199999809265,
+    "glbLoadMs": 2930.899999856949,
     "glbStatus": "Loaded rigged rider PBR GLB",
     "visuals": {
       "skyLoaded": true,
+      "airflow": {
+        "visible": false,
+        "alpha": 0.06074250190247025,
+        "count": 40,
+        "intensity": 2.2845910288608237e-29
+      },
       "riggedPilots": 1,
+      "torsoSecondaryMotion": 1,
       "animationClips": [
         "Flight",
         "Boost",
@@ -33,35 +33,95 @@
         "BankRight",
         "Recover"
       ],
-      "materials": 33,
+      "materials": 37,
       "quality": "Low",
-      "drawCalls": 22,
-      "vertices": 104358,
-      "activeMeshes": 22
+      "drawCalls": 21,
+      "vertices": 106908,
+      "activeMeshes": 21
     },
-    "sphereY": 2.75,
+    "motion": {
+      "x": 3.3274764319513954,
+      "y": 12.886025002352598,
+      "z": 99.80996861779,
+      "yaw": 0,
+      "pitch": {
+        "value": -0.00006958262800358793,
+        "velocity": -0.00040202401577586717
+      },
+      "bank": {
+        "value": -0.000043041514487657863,
+        "velocity": 0.0010169492066649925
+      },
+      "turnRate": 0,
+      "torsoLean": {
+        "value": 0,
+        "velocity": 0
+      },
+      "verticalSpeed": 0.009810800777936026,
+      "forwardSpeed": 0.002707537415096206,
+      "weights": {
+        "Flight": 0.6246480017121824,
+        "Boost": 5.86438460687775e-71,
+        "Brake": 0,
+        "Ascend": 0.000458814002350436,
+        "Descend": 0.000005819537330475465,
+        "BankLeft": 0.000009411400068145336,
+        "BankRight": 0.00008915232075929528,
+        "Recover": 0.3747888010273094
+      }
+    },
+    "camera": {
+      "x": 3.3262480588249415,
+      "y": 16.085260778940988,
+      "z": 90.81012717801096,
+      "yaw": 0,
+      "pitch": 0
+    },
+    "sphereY": 2.7500107288360596,
     "pilots": [
       {
         "id": "local",
         "name": "Skyfarer",
         "team": "auric",
         "role": "Striker",
-        "x": 0,
-        "y": 13,
-        "z": 23.76666666666663,
-        "vx": 0,
-        "vy": 0,
-        "vz": 1.051347140744624e-23,
+        "x": 3.3280350224697095,
+        "y": 12.886428771123434,
+        "z": 99.80990475938471,
+        "vx": 0.005684564814921972,
+        "vy": 0.012417828242190683,
+        "vz": 0.002738228879136781,
         "yaw": 0,
         "pitch": 0,
         "energy": 100,
-        "recovery": 0,
-        "seq": 453
+        "recovery": 0.55,
+        "forwardAxis": 4.275039583716472e-72,
+        "strafeAxis": 0,
+        "liftAxis": 0,
+        "boostBlend": 0,
+        "simTime": 18.883333333332903,
+        "airSpeed": 4.664818871695767,
+        "pressure": 13.308136644293292,
+        "windX": 4.278066973488353,
+        "windY": 0.21450504536049475,
+        "windZ": 1.9011121313992547,
+        "loadFactor": 1.0067348605062707,
+        "acceleration": 0.8834285397288362,
+        "bank": 0,
+        "bankVelocity": 0,
+        "rollLoad": 0,
+        "turnRemaining": 0,
+        "turnCooldown": 0,
+        "turnCount": 0,
+        "turnStartYaw": 0,
+        "turnTargetYaw": 0,
+        "turnSign": 1,
+        "turnHeld": false,
+        "seq": 634
       }
     ],
     "ready": true,
     "courseFinished": false,
-    "elapsed": 18.85519999980925
+    "elapsed": 18.88470000028609
   },
   "readiness": {
     "version": 1,
@@ -69,14 +129,14 @@
     "maxTextureSize": 8192,
     "hardwareConcurrencyHint": 10,
     "deviceMemoryBucketGB": 16,
-    "p95Ms": 22.6,
+    "p95Ms": 48.3,
     "frames": 45,
     "skipped": false,
-    "time": "2026-11-12T06:25:37.714Z"
+    "time": "2026-11-12T08:30:09.202Z"
   },
   "multiplayer": {
     "clients": 2,
-    "pilotCount": 2,
+    "pilotCount": 14,
     "movementSynced": true
   },
   "errors": []

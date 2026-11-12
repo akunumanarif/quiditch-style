@@ -8,6 +8,7 @@ export const defaultBindings = {
   boost: "ShiftLeft",
   recenter: "KeyR",
   quickTurn: "KeyQ",
+  interact: "KeyF",
 };
 export type FlightAction = keyof typeof defaultBindings;
 export type Settings = {

@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "milestone": "M1",
+  "version": 3,
+  "milestone": "M2",
   "assets": [
     {
       "id": "windmere-rider",
@@ -35,6 +35,19 @@
       "url": "/assets/windmere-menu.jpg",
       "provenance": "Unmodified in-engine capture of this project, High graphics; no full arena loads in menu",
       "bytes": 391138
+    },
+    {
+      "id": "windmere-rider-lod",
+      "url": "/assets/windmere-rider-lod.glb",
+      "source": "assets-source/build_lod.py",
+      "blendSource": "assets-source/windmere-rider.blend",
+      "bytes": 781284,
+      "sha256": "235d5754e4fb56c22c3ef75a61f1c78dd4b2aacaa88c6c97e72e45145536b619",
+      "triangles": 4957,
+      "meshParts": 9,
+      "joints": 12,
+      "provenance": "Decimated original rider; same original model and embedded CC0 leather texture",
+      "status": "M2 bot LOD, Flight loop at runtime; simplified shared team materials"
     }
   ]
 }

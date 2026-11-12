@@ -1,3 +1,4 @@
+import { MatchRoom } from "./rooms/MatchRoom.ts";
 import { Server, Room, type Client } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { randomBytes } from "node:crypto";
@@ -56,7 +57,7 @@ class FlightRoom extends Room {
           Date.now() - (this.lastInput.get(id) || 0) < 300
             ? this.flightInputs.get(id) || neutralInput()
             : { ...neutralInput(), yaw: p.yaw };
-        stepFlight(p, i, 1 / 30,this.tick/30);
+        stepFlight(p, i, 1 / 30, this.tick / 30);
       }
       this.tick++;
       if (this.tick % 2 === 0)
@@ -112,11 +113,12 @@ class FlightRoom extends Room {
 }
 const server = new Server({ transport: new WebSocketTransport() });
 server.define("flight", FlightRoom);
+server.define("match", MatchRoom);
 await server.listen(Number(process.env.PORT || 2567));
 console.log(
   JSON.stringify({
     event: "server_ready",
     port: Number(process.env.PORT || 2567),
-    milestone: "M0",
+    milestone: "M2",
   }),
 );

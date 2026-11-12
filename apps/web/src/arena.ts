@@ -59,6 +59,7 @@ type Rider = {
   root: TransformNode;
   model: InstantiatedEntries;
   team: string;
+  bot: boolean;
   pose: FlightPose;
   spine?: TransformNode;
   trail: TrailMesh;
@@ -91,6 +92,13 @@ export function buildArena(
   let glbLoadMs = 0;
   let glbStatus = "Loading";
   let container: AssetContainer | undefined;
+  let botContainer: AssetContainer | undefined;
+  const botAssetReady = LoadAssetContainerAsync(
+    "/assets/windmere-rider-lod.glb",
+    scene,
+  ).then((a) => {
+    botContainer = a;
+  });
   const start = performance.now();
   const assetReady = LoadAssetContainerAsync(
     "/assets/windmere-rider.glb",
@@ -144,15 +152,16 @@ export function buildArena(
   trailMaterial.emissiveColor = new Color3(0.55, 0.68, 0.63);
   trailMaterial.alpha = 0.23;
   trailMaterial.backFaceCulling = false;
+  const botMaterials = new Map<string, StandardMaterial>();
   function createRider(p: Pilot): Rider | undefined {
     if (!container) return;
     const root = new TransformNode("pilot-" + p.id, scene);
     root.position.set(p.x, p.y, p.z);
-    const model = container.instantiateModelsToScene(
-      (name) => p.id + "-" + name,
-      true,
-      { doNotInstantiate: true },
-    );
+    const model = (
+      p.bot && botContainer ? botContainer : container
+    ).instantiateModelsToScene((name) => p.id + "-" + name, !p.bot, {
+      doNotInstantiate: true,
+    });
     for (const n of model.rootNodes) {
       n.parent = root;
       if (n instanceof TransformNode) {
@@ -164,9 +173,29 @@ export function buildArena(
     for (const m of meshes) {
       m.isPickable = false;
       m.receiveShadows = true;
-      environment.shadow.addShadowCaster(m);
+      if (!p.bot) environment.shadow.addShadowCaster(m);
       const mat = m.material;
-      if (mat instanceof PBRMaterial && mat.name.includes("TeamFabric")) {
+      if (p.bot && mat instanceof PBRMaterial) {
+        const key = p.team + mat.name;
+        let simple = botMaterials.get(key);
+        if (!simple) {
+          simple = new StandardMaterial("bot " + key, scene);
+          simple.diffuseTexture = mat.albedoTexture;
+          simple.diffuseColor = mat.name.includes("TeamFabric")
+            ? Color3.FromHexString(
+                p.team === "auric" ? "#8d652f" : "#315d56",
+              ).toLinearSpace()
+            : mat.albedoColor.clone();
+          simple.specularColor = new Color3(0.08, 0.08, 0.07);
+          botMaterials.set(key, simple);
+        }
+        m.material = simple;
+      }
+      if (
+        !p.bot &&
+        mat instanceof PBRMaterial &&
+        mat.name.includes("TeamFabric")
+      ) {
         mat.albedoColor = Color3.FromHexString(
           p.team === "auric" ? "#8d652f" : "#315d56",
         ).toLinearSpace();
@@ -192,16 +221,17 @@ export function buildArena(
     );
     for (const group of model.animationGroups) {
       group.weight = group === base ? 1 : 0;
-      group.start(true, 1);
+      if (!p.bot || group === base) group.start(true, 1);
     }
     if (base?.animatables[0])
       for (const group of model.animationGroups)
-        if (group !== base) group.syncAllAnimationsWith(base.animatables[0]);
+        if (!p.bot && group !== base)
+          group.syncAllAnimationsWith(base.animatables[0]);
     const spine =
       model.skeletons[0]?.bones
         .find((bone) => bone.name.endsWith("chest"))
         ?.getTransformNode() ?? undefined;
-    const r = { root, model, team: p.team, trail, pose, spine };
+    const r = { root, model, team: p.team, bot: !!p.bot, trail, pose, spine };
     riders.set(p.id, r);
     return r;
   }
@@ -214,7 +244,8 @@ export function buildArena(
     for (const m of r.root.getChildMeshes())
       environment.shadow.removeShadowCaster(m);
     r.model.dispose();
-    for (const material of materials) material?.dispose(false, false);
+    if (!r.bot)
+      for (const material of materials) material?.dispose(false, false);
     r.root.dispose();
   }
   let motionReduced = false;
@@ -257,7 +288,8 @@ export function buildArena(
       r.trail.isVisible = Math.hypot(p.vx, p.vz) > 27 && !motionReduced;
       for (const group of r.model.animationGroups) {
         const clip = FLIGHT_CLIPS.find((name) => group.name.endsWith(name));
-        if (clip) group.setWeightForAllAnimatables(r.pose.weights[clip]);
+        if (clip && !p.bot)
+          group.setWeightForAllAnimatables(r.pose.weights[clip]);
         group.speedRatio = 1 + Math.min(1.4, p.airSpeed / 30);
       }
     }
@@ -308,7 +340,7 @@ export function buildArena(
     },
     quality,
     physicsReady,
-    assetReady,
+    assetReady: Promise.all([assetReady, botAssetReady]),
     sceneryReady: environment.sceneryReady,
     setReducedMotion(value: boolean) {
       motionReduced = value;
@@ -345,6 +377,8 @@ export function buildArena(
       scene.onAfterAnimationsObservable.remove(torsoObserver);
       airEffects.dispose();
       container?.dispose();
+      botContainer?.dispose();
+      for (const mat of botMaterials.values()) mat.dispose(false, false);
       instrument.dispose();
       pipeline.dispose();
       environment.shadow.dispose();

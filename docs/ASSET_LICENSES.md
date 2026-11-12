@@ -21,3 +21,7 @@
 Verified Poly Haven asset license: https://polyhaven.com/license. Local snapshot: assets-source/vendor/polyhaven-license.html. Download URLs, SHA-256 hashes and sizes: public-assets/vendor-manifest.json. Metadata is prepared by the offline download script; the running game fetches assets locally and does not call the Poly Haven API. Powered by Poly Haven.
 
 No ripped game/film assets, fictional house insignia or unlicensed music. Final branding/trademark clearance has not been performed. Blender source is supplied for further original asset work. The older broom-proxy.glb remains a historical M0 asset and is not used by the current rider.
+
+## M2 bot LOD
+
+`windmere-rider-lod.glb` is derived locally from the original `windmere-rider.blend` by `assets-source/build_lod.py`. Exported GLB: 4,957 triangles, 9 mesh parts, 12 joints, 8 animation clips (only Flight is evaluated for bots). Same original character/broom provenance and embedded CC0 leather; no new external license. Runtime bot team materials are shared and use simple diffuse shading; bot shadows are omitted to bound cost.
